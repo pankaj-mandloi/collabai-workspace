@@ -1,53 +1,35 @@
-import express from "express";
 import http from "http";
-import { Server } from "socket.io";
-import cors from "cors";
 import dotenv from "dotenv";
+import app from "./app.js";
 import connectDB from "./config/db.js";
+import initializeSocket from "./sockets/index.js";
 
+// Load environment variables
 dotenv.config();
 
-const app = express();
-const server = http.createServer(app);
-
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  credentials: true,
-}));
-app.use(express.json());
-
-// Socket.io setup
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
-
-// Test route
-app.get("/", (req, res) => {
-  res.json({ 
-    message: "🚀 CollabAI Backend is running!",
-    status: "healthy" 
-  });
-});
-
-// Socket.io connection
-io.on("connection", (socket) => {
-  console.log(`✅ User connected: ${socket.id}`);
-
-  socket.on("disconnect", () => {
-    console.log(`❌ User disconnected: ${socket.id}`);
-  });
-});
-
-// Start server
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
-  server.listen(PORT, () => {
-    console.log(`🔥 Backend running on http://localhost:${PORT}`);
-  });
-});
+const startServer = async () => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+
+    // Create HTTP server
+    const server = http.createServer(app);
+
+    // Initialize Socket.io
+    initializeSocket(server);
+
+    // Start listening
+    server.listen(PORT, () => {
+      console.log(`🔥 Server running on http://localhost:${PORT}`);
+      console.log(`📡 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🌐 CORS enabled for: ${process.env.CLIENT_URL || "http://localhost:3000"}`);
+    });
+  } catch (error) {
+    console.error("❌ Server startup failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

@@ -1,8 +1,9 @@
 import { Router } from "express";
+import userRoutes from "./user.routes.js";
 
 const router = Router();
 
-// Health check
+// API v1 root
 router.get("/", (req, res) => {
   res.json({
     message: "🚀 CollabAI API v1",
@@ -11,10 +12,7 @@ router.get("/", (req, res) => {
   });
 });
 
-// Feature routes (will be added as we build)
-// router.use("/auth", authRoutes);
-// router.use("/workspaces", workspaceRoutes);
-// router.use("/messages", messageRoutes);
-// router.use("/tasks", taskRoutes);
+// Feature routes
+router.use("/users", userRoutes);
 
 export default router;

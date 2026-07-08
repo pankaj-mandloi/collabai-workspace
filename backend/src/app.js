@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
 import routes from "./routes/index.js";
+import webhookRoutes from "./routes/webhook.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
+import { clerkAuthMiddleware } from "./middlewares/auth.middleware.js";
 
 const app = express();
 
@@ -13,11 +15,21 @@ app.use(
   })
 );
 
+// Webhook route (raw body needed for signature verification)
+app.use(
+  "/api/webhooks",
+  express.raw({ type: "application/json" }),
+  webhookRoutes
+);
+
 // Body parsers
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Health check (root)
+// Clerk middleware (applied to all routes after this)
+app.use(clerkAuthMiddleware);
+
+// Health checks
 app.get("/", (req, res) => {
   res.json({
     message: "🚀 CollabAI Backend is running!",
@@ -37,7 +49,7 @@ app.get("/health", (req, res) => {
 // API Routes
 app.use("/api/v1", routes);
 
-// Error handling middleware (MUST be last)
+// Error handler (must be last)
 app.use(errorMiddleware);
 
 export default app;

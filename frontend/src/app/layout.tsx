@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "CollabAI - Real-time AI Collaboration",
-  description: "Team collaboration platform with AI agents, real-time chat, and collaborative editing",
+  description:
+    "Team collaboration platform with AI agents, real-time chat, and collaborative editing",
 };
 
 export default function RootLayout({
@@ -30,6 +32,12 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           {children}
+          <Toaster
+            theme="dark"
+            position="top-right"
+            richColors
+            closeButton
+          />
         </body>
       </html>
     </ClerkProvider>

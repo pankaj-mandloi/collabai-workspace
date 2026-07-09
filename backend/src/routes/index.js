@@ -1,5 +1,7 @@
 import { Router } from "express";
 import userRoutes from "./user.routes.js";
+import workspaceRoutes from "./workspace.routes.js";
+import messageRoutes  from "./message.routes.js"
 
 const router = Router();
 
@@ -14,5 +16,7 @@ router.get("/", (req, res) => {
 
 // Feature routes
 router.use("/users", userRoutes);
+router.use("/workspaces", workspaceRoutes);
+router.use("/messages",messageRoutes);
 
 export default router;

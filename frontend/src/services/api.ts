@@ -7,22 +7,35 @@ const api: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Important: Send cookies with requests
 });
 
-// Request interceptor (add auth token later)
+// Request interceptor - Add auth token from Clerk
 api.interceptors.request.use(
-  (config) => {
-    // Add auth token here later
+  async (config) => {
+    // Get token from Clerk (works in browser)
+    if (typeof window !== "undefined") {
+      const clerk = (window as any).Clerk;
+      if (clerk?.session) {
+        const token = await clerk.session.getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor (handle errors globally)
+// Response interceptor - Handle errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("API Error:", error.response?.data || error.message);
+    console.error(
+      "API Error:",
+      error.response?.data?.message || error.message
+    );
     return Promise.reject(error);
   }
 );

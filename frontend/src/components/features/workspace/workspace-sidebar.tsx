@@ -48,7 +48,7 @@ export function WorkspaceSidebar({ workspace }: WorkspaceSidebarProps) {
       icon: FileText,
       label: "Documents",
       href: `/workspace/${workspaceId}/documents`,
-      badge: "Soon",
+      active: pathname.startsWith(`/workspace/${workspaceId}/documents`),
     },
     {
       icon: Bot,

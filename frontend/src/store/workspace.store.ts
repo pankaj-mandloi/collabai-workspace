@@ -9,7 +9,10 @@ import {
 import { workspaceService } from "@/services/workspace.service";
 
 interface WorkspaceState {
-  // State
+  // ============================================
+  // STATE
+  // ============================================
+
   workspaces: Workspace[];
   currentWorkspace: Workspace | null;
   isLoading: boolean;
@@ -18,9 +21,13 @@ interface WorkspaceState {
   isDeleting: boolean;
   error: string | null;
 
-  // Actions
+  // ============================================
+  // ACTIONS
+  // ============================================
+
   fetchWorkspaces: () => Promise<void>;
   fetchWorkspaceById: (id: string) => Promise<void>;
+  getWorkspace: (id: string) => Workspace | null;
   createWorkspace: (payload: CreateWorkspacePayload) => Promise<Workspace>;
   updateWorkspace: (
     id: string,
@@ -52,7 +59,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
     (set, get) => ({
       ...initialState,
 
-      // Fetch all workspaces
+      // ============================================
+      // FETCH ALL WORKSPACES
+      // ============================================
+
       fetchWorkspaces: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -66,7 +76,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Fetch single workspace
+      // ============================================
+      // FETCH SINGLE WORKSPACE
+      // ============================================
+
       fetchWorkspaceById: async (id: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -80,7 +93,19 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Create workspace
+      // ============================================
+      // GET WORKSPACE FROM STORE (no API call)
+      // ============================================
+
+      getWorkspace: (id: string) => {
+        const state = get();
+        return state.workspaces.find((w) => w._id === id) || null;
+      },
+
+      // ============================================
+      // CREATE WORKSPACE
+      // ============================================
+
       createWorkspace: async (payload: CreateWorkspacePayload) => {
         set({ isCreating: true, error: null });
         try {
@@ -100,7 +125,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Update workspace
+      // ============================================
+      // UPDATE WORKSPACE
+      // ============================================
+
       updateWorkspace: async (
         id: string,
         payload: UpdateWorkspacePayload
@@ -129,7 +157,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Delete workspace
+      // ============================================
+      // DELETE WORKSPACE
+      // ============================================
+
       deleteWorkspace: async (id: string) => {
         set({ isDeleting: true, error: null });
         try {
@@ -152,7 +183,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Invite member
+      // ============================================
+      // INVITE MEMBER
+      // ============================================
+
       inviteMember: async (
         workspaceId: string,
         payload: InviteMemberPayload
@@ -182,7 +216,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Remove member
+      // ============================================
+      // REMOVE MEMBER
+      // ============================================
+
       removeMember: async (workspaceId: string, memberId: string) => {
         set({ error: null });
         try {
@@ -209,17 +246,49 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         }
       },
 
-      // Set current workspace
+      // ============================================
+      // WORKSPACE MANAGEMENT
+      // ============================================
+
       setCurrentWorkspace: (workspace: Workspace | null) => {
         set({ currentWorkspace: workspace });
       },
 
-      // Clear error
+      // ============================================
+      // UTILITY
+      // ============================================
+
       clearError: () => set({ error: null }),
 
-      // Reset store
       reset: () => set(initialState),
     }),
-    { name: "workspace-store" } // DevTools name
+    { name: "workspace-store" }
   )
 );
+
+// ============================================
+// SELECTORS (Optimized hooks)
+// ============================================
+
+/**
+ * Get workspace by ID from store (without triggering re-fetch)
+ */
+export const useWorkspaceById = (id: string | null) => {
+  return useWorkspaceStore((state) =>
+    id ? state.workspaces.find((w) => w._id === id) || null : null
+  );
+};
+
+/**
+ * Get current workspace
+ */
+export const useCurrentWorkspace = () => {
+  return useWorkspaceStore((state) => state.currentWorkspace);
+};
+
+/**
+ * Get workspaces count
+ */
+export const useWorkspacesCount = () => {
+  return useWorkspaceStore((state) => state.workspaces.length);
+};

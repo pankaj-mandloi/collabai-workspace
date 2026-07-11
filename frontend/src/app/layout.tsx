@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { Toaster } from "sonner";
+import { SocketProvider } from "@/providers/socket-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,18 +24,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
-          <Toaster
-            theme="dark"
-            position="top-right"
-            richColors
-            closeButton
-          />
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "#10b981",
+        },
+        elements: {
+          formButtonPrimary:
+            "bg-emerald-500 hover:bg-emerald-600 text-white",
+          footerActionLink:
+            "text-emerald-400 hover:text-emerald-300",
+        },
+      } as any}
+    >
+      <html lang="en" className={inter.variable}>
+        <body className="font-sans antialiased">
+          <SocketProvider>
+            {children}
+            <Toaster
+              theme="dark"
+              position="top-right"
+              richColors
+              closeButton
+            />
+          </SocketProvider>
         </body>
       </html>
     </ClerkProvider>

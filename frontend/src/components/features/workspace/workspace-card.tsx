@@ -1,9 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +18,7 @@ import {
   Trash2,
   Crown,
   Shield,
+  ArrowUpRight,
 } from "lucide-react";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useState } from "react";
@@ -33,15 +32,13 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
   const { deleteWorkspace, isDeleting } = useWorkspaceStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Get current user's role in this workspace
   const currentMember = workspace.members.find(
-    (m) => m.user.email === user?.primaryEmailAddress?.emailAddress,
+    (m) => m.user.email === user?.primaryEmailAddress?.emailAddress
   );
   const userRole = currentMember?.role;
   const isOwner = userRole === "owner";
   const canManage = userRole === "owner" || userRole === "admin";
 
-  // Handle delete
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -57,7 +54,6 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
     }
   };
 
-  // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -67,41 +63,43 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
       .slice(0, 2);
   };
 
-  // Get role icon
   const getRoleIcon = () => {
     if (userRole === "owner") return <Crown className="w-3 h-3" />;
     if (userRole === "admin") return <Shield className="w-3 h-3" />;
     return <Users className="w-3 h-3" />;
   };
 
-  // Get role color
-  const getRoleColor = () => {
+  const getRoleStyle = () => {
     if (userRole === "owner")
-      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
     if (userRole === "admin")
-      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-    return "bg-slate-500/20 text-slate-400 border-slate-500/30";
+      return "bg-lime-500/10 text-lime-400 border-lime-500/20";
+    return "bg-white/5 text-slate-400 border-white/10";
   };
 
   return (
-    <Link href={`/workspace/${workspace._id}`}>
-      <Card className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer group h-full">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            {/* Avatar + Name */}
+    <Link href={`/workspace/${workspace._id}`} className="block group">
+      <div className="relative rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 hover:bg-white/[0.05] hover:border-emerald-500/30 transition-all cursor-pointer h-full">
+        {/* Hover Glow */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+
+        <div className="relative">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Avatar className="w-12 h-12 border-2 border-slate-700">
+              <Avatar className="w-12 h-12 border-2 border-emerald-500/20">
                 {workspace.avatar ? (
                   <AvatarImage src={workspace.avatar} alt={workspace.name} />
                 ) : null}
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-lime-400 text-black font-bold">
                   {getInitials(workspace.name)}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-white truncate group-hover:text-blue-400 transition-colors">
+                <h3 className="font-semibold text-white truncate group-hover:text-emerald-400 transition-colors flex items-center gap-2">
                   {workspace.name}
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {new Date(workspace.createdAt).toLocaleDateString("en-US", {
@@ -113,11 +111,10 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
               </div>
             </div>
 
-            {/* Actions Menu (only for owner/admin) */}
             {canManage && (
               <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <DropdownMenuTrigger
-                  className="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -127,10 +124,10 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="bg-slate-900 border-slate-800"
+                  className="bg-[#0a0c0b] border-white/10"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <DropdownMenuItem className="text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer">
+                  <DropdownMenuItem className="text-slate-300 hover:bg-white/5 hover:text-white cursor-pointer">
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </DropdownMenuItem>
@@ -148,24 +145,24 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
               </DropdownMenu>
             )}
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4">
           {/* Description */}
-          {workspace.description ? (
-            <p className="text-sm text-slate-400 line-clamp-2 min-h-[2.5rem]">
-              {workspace.description}
-            </p>
-          ) : (
-            <p className="text-sm text-slate-600 italic min-h-[2.5rem]">
-              No description
-            </p>
-          )}
+          <div className="mb-4 min-h-[2.5rem]">
+            {workspace.description ? (
+              <p className="text-sm text-slate-400 line-clamp-2">
+                {workspace.description}
+              </p>
+            ) : (
+              <p className="text-sm text-slate-600 italic">
+                No description
+              </p>
+            )}
+          </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-between pt-4 border-t border-white/[0.06]">
             <div className="flex items-center gap-2 text-slate-400 text-sm">
-              <Users className="w-4 h-4" />
+              <Users className="w-3.5 h-3.5" />
               <span>
                 {workspace.members.length}{" "}
                 {workspace.members.length === 1 ? "member" : "members"}
@@ -175,15 +172,15 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
             {userRole && (
               <Badge
                 variant="outline"
-                className={`text-xs gap-1 ${getRoleColor()}`}
+                className={`text-xs gap-1 ${getRoleStyle()}`}
               >
                 {getRoleIcon()}
                 {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
               </Badge>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }

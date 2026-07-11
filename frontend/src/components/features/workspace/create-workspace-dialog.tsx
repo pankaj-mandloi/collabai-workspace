@@ -5,7 +5,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useWorkspaceStore } from "@/store/workspace.store";
-import { Loader2, Sparkles, Users } from "lucide-react";
+import { Loader2, Sparkles, X, Users } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateWorkspaceDialogProps {
@@ -27,10 +26,12 @@ export function CreateWorkspaceDialog({
   onOpenChange,
 }: CreateWorkspaceDialogProps) {
   const { createWorkspace, isCreating } = useWorkspaceStore();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
+
   const [errors, setErrors] = useState({
     name: "",
     description: "",
@@ -77,60 +78,70 @@ export function CreateWorkspaceDialog({
         description: `${workspace.name} is ready to use`,
       });
 
-      // Reset form and close
-      setFormData({ name: "", description: "" });
-      setErrors({ name: "", description: "" });
+      handleReset();
       onOpenChange(false);
     } catch (error: any) {
       const message =
         error.response?.data?.message || "Failed to create workspace";
-      toast.error("Error", {
+      toast.error("Error creating workspace", {
         description: message,
       });
     }
   };
 
-  // Handle input change
+  const handleReset = () => {
+    setFormData({ name: "", description: "" });
+    setErrors({ name: "", description: "" });
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // Handle dialog close (reset form)
   const handleClose = (open: boolean) => {
     if (!open && !isCreating) {
-      setFormData({ name: "", description: "" });
-      setErrors({ name: "", description: "" });
+      handleReset();
     }
     onOpenChange(open);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-slate-900 border-slate-800 text-white sm:max-w-[500px]">
-        <DialogHeader>
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-2">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <DialogTitle className="text-2xl font-bold">
-            Create New Workspace
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Set up a new workspace for your team to collaborate in real-time.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="bg-[#0a0c0b] border-white/10 text-white sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-0">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-white/[0.06]">
+          <DialogHeader>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-lime-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-black" />
+              </div>
+              <div className="flex-1">
+                <DialogTitle className="text-lg font-bold tracking-tight text-white">
+                  Create New Workspace
+                </DialogTitle>
+                <DialogDescription className="text-slate-400 text-xs mt-1">
+                  Set up a new workspace for your team to collaborate
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {/* Workspace Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-slate-300">
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="name"
+              className="text-white text-sm font-medium flex items-center gap-1"
+            >
               Workspace Name <span className="text-red-400">*</span>
             </Label>
             <Input
@@ -140,22 +151,31 @@ export function CreateWorkspaceDialog({
               value={formData.name}
               onChange={handleChange}
               disabled={isCreating}
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500"
+              className="bg-white/[0.03] border-white/10 text-white placeholder:text-slate-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 h-10"
               autoFocus
+              maxLength={50}
             />
             {errors.name && (
-              <p className="text-red-400 text-xs">{errors.name}</p>
+              <p className="text-red-400 text-xs flex items-center gap-1">
+                <X className="w-3 h-3" />
+                {errors.name}
+              </p>
             )}
-            <p className="text-slate-500 text-xs">
-              {formData.name.length}/50 characters
+            <p className="text-[10px] text-slate-600 text-right">
+              {formData.name.length}/50
             </p>
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-slate-300">
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="description"
+              className="text-white text-sm font-medium"
+            >
               Description{" "}
-              <span className="text-slate-500 text-xs">(optional)</span>
+              <span className="text-[11px] text-slate-500 font-normal">
+                (optional)
+              </span>
             </Label>
             <Textarea
               id="description"
@@ -165,58 +185,62 @@ export function CreateWorkspaceDialog({
               onChange={handleChange}
               disabled={isCreating}
               rows={3}
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 resize-none"
+              className="bg-white/[0.03] border-white/10 text-white placeholder:text-slate-600 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 resize-none text-sm"
+              maxLength={500}
             />
             {errors.description && (
-              <p className="text-red-400 text-xs">{errors.description}</p>
+              <p className="text-red-400 text-xs flex items-center gap-1">
+                <X className="w-3 h-3" />
+                {errors.description}
+              </p>
             )}
-            <p className="text-slate-500 text-xs">
-              {formData.description.length}/500 characters
+            <p className="text-[10px] text-slate-600 text-right">
+              {formData.description.length}/500
             </p>
           </div>
 
           {/* Info Card */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex items-start gap-3">
-            <Users className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+              <Users className="w-4 h-4 text-emerald-400" />
+            </div>
             <div>
-              <p className="text-sm text-slate-300 font-medium">
+              <p className="text-sm text-white font-medium">
                 You'll be the owner
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 You can invite team members after creation
               </p>
             </div>
           </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleClose(false)}
-              disabled={isCreating}
-              className="bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isCreating}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 gap-2"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Create Workspace
-                </>
-              )}
-            </Button>
-          </DialogFooter>
         </form>
+
+        {/* Footer - Small buttons */}
+        <div className="px-6 py-4 border-t border-white/[0.06] bg-[#070908]/50 flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            onClick={() => handleClose(false)}
+            className="bg-red-500 hover:bg-red-600 text-white font-medium h-9 px-4 min-w-[80px] text-sm"
+          >
+            Cancel
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isCreating}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium h-9 px-4 min-w-[80px] gap-1.5 text-sm disabled:!opacity-70"
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create"
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

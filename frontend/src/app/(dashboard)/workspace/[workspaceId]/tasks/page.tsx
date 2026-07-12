@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { KanbanBoard } from "@/components/features/tasks/kanban-board";
 import { CreateTaskDialog } from "@/components/features/tasks/create-task-dialog";
@@ -9,23 +9,17 @@ import { Task, TaskStatus } from "@/types/task.types";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid } from "lucide-react";
 import { useTaskCounts } from "@/store/task.store";
-import { useWorkspaceStore } from "@/store/workspace.store";
 
 export default function TasksPage() {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
   const counts = useTaskCounts(workspaceId);
-  const { fetchWorkspaceById } = useWorkspaceStore();
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createDefaultStatus, setCreateDefaultStatus] =
     useState<TaskStatus>("todo");
-
-  useEffect(() => {
-    fetchWorkspaceById(workspaceId);
-  }, [workspaceId, fetchWorkspaceById]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -38,7 +32,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="fixed inset-0 top-[64px] left-64 right-0 flex flex-col bg-[#070908]">
+    <div className="flex-1 flex flex-col bg-[#070908]">
       {/* Ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/[0.03] rounded-full blur-[100px] pointer-events-none" />
 
@@ -60,7 +54,7 @@ export default function TasksPage() {
 
           <Button
             onClick={() => handleAddTask("todo")}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-lg shadow-emerald-500/20 gap-2 h-10 px-3"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium h-9 px-4 gap-2"
           >
             <Plus className="w-4 h-4" />
             Create Task
@@ -69,7 +63,7 @@ export default function TasksPage() {
       </div>
 
       {/* Kanban Board */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         <KanbanBoard
           workspaceId={workspaceId}
           onTaskClick={handleTaskClick}

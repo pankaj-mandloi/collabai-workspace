@@ -4,6 +4,7 @@ import workspaceRoutes from "./workspace.routes.js";
 import messageRoutes from "./message.routes.js";
 import taskRoutes from "./task.routes.js";
 import documentRoutes from "./document.routes.js";
+import aiRoutes from "./ai.routes.js";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/workspaces", workspaceRoutes);
 router.use("/messages", messageRoutes);
 router.use("/tasks", taskRoutes);
 router.use("/documents", documentRoutes);
+router.use("/ai", aiRoutes);
 
 export default router;

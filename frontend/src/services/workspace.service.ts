@@ -87,6 +87,19 @@ class WorkspaceService {
   }
 
   /**
+   * Cancel/Delete pending invitation
+   */
+  async cancelInvitation(
+    workspaceId: string,
+    invitationId: string
+  ): Promise<Workspace> {
+    const response = await api.delete<ApiResponse<Workspace>>(
+      `/workspaces/${workspaceId}/invitations/${invitationId}`
+    );
+    return response.data.data;
+  }
+
+  /**
    * Remove member from workspace
    */
   async removeMember(

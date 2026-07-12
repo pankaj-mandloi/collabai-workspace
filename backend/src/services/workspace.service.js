@@ -5,7 +5,6 @@ import ApiError from "../utils/ApiError.js";
 class WorkspaceService {
   /**
    * Generate unique slug from workspace name
-   * Example: "Marketing Team" → "marketing-team-x7k2"
    */
   generateSlug(name) {
     const baseSlug = name
@@ -15,56 +14,53 @@ class WorkspaceService {
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-");
 
-    // Add random suffix for uniqueness
     const randomSuffix = Math.random().toString(36).substring(2, 6);
     return `${baseSlug}-${randomSuffix}`;
   }
 
- /**
- * Create new workspace
- * Owner automatically added as member
- */
-async create(data, user) {
-  try {
-    const { name, description } = data;
+  /**
+   * Create new workspace
+   */
+  async create(data, user) {
+    try {
+      const { name, description } = data;
 
-    if (!name || name.trim().length < 3) {
-      throw new ApiError(400, "Workspace name must be at least 3 characters");
+      if (!name || name.trim().length < 3) {
+        throw new ApiError(400, "Workspace name must be at least 3 characters");
+      }
+
+      const slug = this.generateSlug(name);
+
+      let workspace = await Workspace.create({
+        name: name.trim(),
+        description: description?.trim() || "",
+        slug,
+        owner: user._id,
+        members: [
+          {
+            user: user._id,
+            role: "owner",
+            joinedAt: new Date(),
+          },
+        ],
+      });
+
+      await User.findByIdAndUpdate(user._id, {
+        $addToSet: { workspaces: workspace._id },
+      });
+
+      // Populate before returning
+      workspace = await Workspace.findById(workspace._id)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
+
+      console.log(`✅ Workspace created: ${workspace.name} by ${user.email}`);
+      return workspace;
+    } catch (error) {
+      console.error("❌ Error creating workspace:", error.message);
+      throw error;
     }
-
-    const slug = this.generateSlug(name);
-
-    let workspace = await Workspace.create({
-      name: name.trim(),
-      description: description?.trim() || "",
-      slug,
-      owner: user._id,
-      members: [
-        {
-          user: user._id,
-          role: "owner",
-          joinedAt: new Date(),
-        },
-      ],
-    });
-
-    // Add workspace to user's workspaces array
-    await User.findByIdAndUpdate(user._id, {
-      $addToSet: { workspaces: workspace._id },
-    });
-
-    // ⭐ POPULATE the workspace before returning
-    workspace = await Workspace.findById(workspace._id)
-      .populate("owner", "firstName lastName email avatar")
-      .populate("members.user", "firstName lastName email avatar");
-
-    console.log(`✅ Workspace created: ${workspace.name} by ${user.email}`);
-    return workspace;
-  } catch (error) {
-    console.error("❌ Error creating workspace:", error.message);
-    throw error;
   }
-}
 
   /**
    * Get all workspaces user is part of
@@ -88,7 +84,6 @@ async create(data, user) {
 
   /**
    * Get single workspace by ID
-   * User must be a member
    */
   async getById(workspaceId, userId) {
     try {
@@ -105,7 +100,6 @@ async create(data, user) {
         throw new ApiError(404, "Workspace no longer active");
       }
 
-      // Check if user is member
       if (!workspace.isMember(userId)) {
         throw new ApiError(403, "You are not a member of this workspace");
       }
@@ -119,7 +113,6 @@ async create(data, user) {
 
   /**
    * Update workspace details
-   * Only owner/admin can update
    */
   async update(workspaceId, data, userId) {
     try {
@@ -144,8 +137,13 @@ async create(data, user) {
 
       await workspace.save();
 
+      // Return populated
+      const updated = await Workspace.findById(workspaceId)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
+
       console.log(`✅ Workspace updated: ${workspace.name}`);
-      return workspace;
+      return updated;
     } catch (error) {
       console.error("❌ Error updating workspace:", error.message);
       throw error;
@@ -154,7 +152,6 @@ async create(data, user) {
 
   /**
    * Delete workspace (soft delete)
-   * Only owner can delete
    */
   async delete(workspaceId, userId) {
     try {
@@ -168,11 +165,9 @@ async create(data, user) {
         throw new ApiError(403, "Only owner can delete workspace");
       }
 
-      // Soft delete (mark inactive)
       workspace.isActive = false;
       await workspace.save();
 
-      // Remove workspace from all members' users array
       await User.updateMany(
         { workspaces: workspaceId },
         { $pull: { workspaces: workspaceId } }
@@ -188,7 +183,6 @@ async create(data, user) {
 
   /**
    * Invite member to workspace
-   * Only owner/admin can invite
    */
   async inviteMember(workspaceId, inviteData, userId) {
     try {
@@ -198,7 +192,10 @@ async create(data, user) {
         throw new ApiError(400, "Valid email is required");
       }
 
-      const workspace = await Workspace.findById(workspaceId);
+      const workspace = await Workspace.findById(workspaceId).populate(
+        "members.user",
+        "email"
+      );
 
       if (!workspace) {
         throw new ApiError(404, "Workspace not found");
@@ -208,8 +205,10 @@ async create(data, user) {
         throw new ApiError(403, "Only owner or admin can invite members");
       }
 
-      // Check if user already exists in system
-      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      // Check if user exists
+      const existingUser = await User.findOne({
+        email: email.toLowerCase(),
+      });
 
       // If user exists and already a member
       if (existingUser && workspace.isMember(existingUser._id)) {
@@ -237,11 +236,13 @@ async create(data, user) {
 
       await workspace.save();
 
-      // If user exists, add workspace to their pending invites (optional)
-      // For MVP, we'll just save invitation in workspace
+      // Return populated
+      const updated = await Workspace.findById(workspaceId)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
 
       console.log(`✅ Invitation sent to ${email} for ${workspace.name}`);
-      return workspace;
+      return updated;
     } catch (error) {
       console.error("❌ Error inviting member:", error.message);
       throw error;
@@ -250,7 +251,6 @@ async create(data, user) {
 
   /**
    * Accept invitation
-   * User must have matching email
    */
   async acceptInvitation(workspaceId, invitationId, user) {
     try {
@@ -291,8 +291,13 @@ async create(data, user) {
         $addToSet: { workspaces: workspace._id },
       });
 
+      // Return populated
+      const updated = await Workspace.findById(workspaceId)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
+
       console.log(`✅ ${user.email} joined workspace ${workspace.name}`);
-      return workspace;
+      return updated;
     } catch (error) {
       console.error("❌ Error accepting invitation:", error.message);
       throw error;
@@ -300,8 +305,49 @@ async create(data, user) {
   }
 
   /**
+   * Cancel/Delete a pending invitation
+   */
+  async cancelInvitation(workspaceId, invitationId, userId) {
+    try {
+      const workspace = await Workspace.findById(workspaceId);
+
+      if (!workspace) {
+        throw new ApiError(404, "Workspace not found");
+      }
+
+      if (!workspace.canManage(userId)) {
+        throw new ApiError(403, "Only owner or admin can cancel invitations");
+      }
+
+      const invitation = workspace.invitations.id(invitationId);
+
+      if (!invitation) {
+        throw new ApiError(404, "Invitation not found");
+      }
+
+      if (invitation.status !== "pending") {
+        throw new ApiError(400, "Only pending invitations can be cancelled");
+      }
+
+      // Remove invitation
+      workspace.invitations.pull(invitationId);
+      await workspace.save();
+
+      // Return populated
+      const updated = await Workspace.findById(workspaceId)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
+
+      console.log(`✅ Invitation cancelled for workspace ${workspace.name}`);
+      return updated;
+    } catch (error) {
+      console.error("❌ Error cancelling invitation:", error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Remove member from workspace
-   * Only owner/admin can remove
    */
   async removeMember(workspaceId, memberUserId, userId) {
     try {
@@ -315,25 +361,30 @@ async create(data, user) {
         throw new ApiError(403, "Only owner or admin can remove members");
       }
 
-      // Can't remove owner
       if (workspace.owner.toString() === memberUserId.toString()) {
         throw new ApiError(400, "Cannot remove workspace owner");
       }
 
-      // Remove member
       workspace.members = workspace.members.filter(
-        (m) => m.user.toString() !== memberUserId.toString()
+        (m) => {
+          const mId = m.user._id ? m.user._id.toString() : m.user.toString();
+          return mId !== memberUserId.toString();
+        }
       );
 
       await workspace.save();
 
-      // Remove workspace from user's workspaces
       await User.findByIdAndUpdate(memberUserId, {
         $pull: { workspaces: workspaceId },
       });
 
+      // Return populated
+      const updated = await Workspace.findById(workspaceId)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
+
       console.log(`✅ Member removed from ${workspace.name}`);
-      return workspace;
+      return updated;
     } catch (error) {
       console.error("❌ Error removing member:", error.message);
       throw error;
@@ -342,7 +393,6 @@ async create(data, user) {
 
   /**
    * Update member role
-   * Only owner can change roles
    */
   async updateMemberRole(workspaceId, memberUserId, newRole, userId) {
     try {
@@ -356,20 +406,19 @@ async create(data, user) {
         throw new ApiError(404, "Workspace not found");
       }
 
-      // Only owner can change roles
       if (workspace.owner.toString() !== userId.toString()) {
         throw new ApiError(403, "Only owner can change member roles");
       }
 
-      const member = workspace.members.find(
-        (m) => m.user.toString() === memberUserId.toString()
-      );
+      const member = workspace.members.find((m) => {
+        const mId = m.user._id ? m.user._id.toString() : m.user.toString();
+        return mId === memberUserId.toString();
+      });
 
       if (!member) {
         throw new ApiError(404, "Member not found");
       }
 
-      // Can't change owner role
       if (member.role === "owner") {
         throw new ApiError(400, "Cannot change owner role");
       }
@@ -377,8 +426,13 @@ async create(data, user) {
       member.role = newRole;
       await workspace.save();
 
+      // Return populated
+      const updated = await Workspace.findById(workspaceId)
+        .populate("owner", "firstName lastName email avatar")
+        .populate("members.user", "firstName lastName email avatar");
+
       console.log(`✅ Member role updated to ${newRole}`);
-      return workspace;
+      return updated;
     } catch (error) {
       console.error("❌ Error updating role:", error.message);
       throw error;

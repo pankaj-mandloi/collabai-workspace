@@ -5,7 +5,6 @@ import asyncHandler from "../utils/asyncHandler.js";
 class WorkspaceController {
   /**
    * POST /api/v1/workspaces
-   * Create new workspace
    */
   createWorkspace = asyncHandler(async (req, res) => {
     const workspace = await workspaceService.create(req.body, req.user);
@@ -17,7 +16,6 @@ class WorkspaceController {
 
   /**
    * GET /api/v1/workspaces
-   * Get all workspaces for logged-in user
    */
   getAllWorkspaces = asyncHandler(async (req, res) => {
     const workspaces = await workspaceService.getAllForUser(req.user._id);
@@ -31,7 +29,6 @@ class WorkspaceController {
 
   /**
    * GET /api/v1/workspaces/:id
-   * Get single workspace by ID
    */
   getWorkspaceById = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -44,7 +41,6 @@ class WorkspaceController {
 
   /**
    * PATCH /api/v1/workspaces/:id
-   * Update workspace details
    */
   updateWorkspace = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -61,7 +57,6 @@ class WorkspaceController {
 
   /**
    * DELETE /api/v1/workspaces/:id
-   * Delete workspace (soft delete)
    */
   deleteWorkspace = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -74,7 +69,6 @@ class WorkspaceController {
 
   /**
    * POST /api/v1/workspaces/:id/invitations
-   * Invite member to workspace
    */
   inviteMember = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -91,7 +85,6 @@ class WorkspaceController {
 
   /**
    * POST /api/v1/workspaces/:id/invitations/:invitationId/accept
-   * Accept invitation
    */
   acceptInvitation = asyncHandler(async (req, res) => {
     const { id, invitationId } = req.params;
@@ -107,8 +100,24 @@ class WorkspaceController {
   });
 
   /**
+   * DELETE /api/v1/workspaces/:id/invitations/:invitationId
+   * Cancel pending invitation
+   */
+  cancelInvitation = asyncHandler(async (req, res) => {
+    const { id, invitationId } = req.params;
+    const workspace = await workspaceService.cancelInvitation(
+      id,
+      invitationId,
+      req.user._id
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, workspace, "Invitation cancelled"));
+  });
+
+  /**
    * DELETE /api/v1/workspaces/:id/members/:memberId
-   * Remove member from workspace
    */
   removeMember = asyncHandler(async (req, res) => {
     const { id, memberId } = req.params;
@@ -125,7 +134,6 @@ class WorkspaceController {
 
   /**
    * PATCH /api/v1/workspaces/:id/members/:memberId/role
-   * Update member role
    */
   updateMemberRole = asyncHandler(async (req, res) => {
     const { id, memberId } = req.params;

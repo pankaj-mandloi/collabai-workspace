@@ -7,9 +7,9 @@ import {
   MessageSquare,
   CheckSquare,
   FileText,
-  Bot,
   Settings,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -37,6 +37,7 @@ export function WorkspaceSidebar({ workspace }: WorkspaceSidebarProps) {
       label: "Chat",
       href: `/workspace/${workspaceId}`,
       active: pathname === `/workspace/${workspaceId}`,
+      aiBadge: true,
     },
     {
       icon: CheckSquare,
@@ -50,13 +51,9 @@ export function WorkspaceSidebar({ workspace }: WorkspaceSidebarProps) {
       href: `/workspace/${workspaceId}/documents`,
       active: pathname.startsWith(`/workspace/${workspaceId}/documents`),
     },
-    {
-      icon: Bot,
-      label: "AI Agent",
-      href: `/workspace/${workspaceId}/ai`,
-      badge: "Soon",
-    },
   ];
+
+  const isSettingsActive = pathname === `/workspace/${workspaceId}/settings`;
 
   return (
     <aside className="w-64 bg-[#0a0c0b] border-r border-white/[0.06] flex flex-col relative">
@@ -101,8 +98,19 @@ export function WorkspaceSidebar({ workspace }: WorkspaceSidebarProps) {
         </div>
 
         {navItems.map((item, idx) => {
-          const content = (
-            <>
+          const baseClass =
+            "group w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-all";
+
+          const activeClass = item.active
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+            : "text-slate-400 hover:bg-white/[0.03] hover:text-white border border-transparent";
+
+          return (
+            <Link
+              key={idx}
+              href={item.href}
+              className={`${baseClass} ${activeClass}`}
+            >
               <item.icon
                 className={`w-4 h-4 flex-shrink-0 transition-colors ${
                   item.active
@@ -111,58 +119,35 @@ export function WorkspaceSidebar({ workspace }: WorkspaceSidebarProps) {
                 }`}
               />
               <span className="flex-1 text-left">{item.label}</span>
-              {item.badge && (
-                <span className="text-[9px] bg-white/[0.05] text-slate-500 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                  {item.badge}
+
+              {item.aiBadge && (
+                <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider pointer-events-none select-none cursor-default">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  AI
                 </span>
               )}
-              {item.active && (
+
+              {item.active && !item.aiBadge && (
                 <div className="w-1 h-1 rounded-full bg-emerald-400" />
               )}
-            </>
-          );
-
-          const baseClass =
-            "group w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-all";
-
-          const activeClass = item.active
-            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-            : "text-slate-400 hover:bg-white/[0.03] hover:text-white border border-transparent";
-
-          const disabledClass = item.badge
-            ? "cursor-not-allowed opacity-50"
-            : "cursor-pointer";
-
-          if (item.badge) {
-            return (
-              <button
-                key={idx}
-                disabled
-                className={`${baseClass} ${activeClass} ${disabledClass}`}
-              >
-                {content}
-              </button>
-            );
-          }
-
-          return (
-            <Link
-              key={idx}
-              href={item.href}
-              className={`${baseClass} ${activeClass}`}
-            >
-              {content}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
+      {/* Settings Button — Now Links to Settings Page */}
       <div className="relative p-3 border-t border-white/[0.06]">
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-500 hover:bg-white/[0.03] hover:text-white rounded-md transition-colors">
+        <Link
+          href={`/workspace/${workspaceId}/settings`}
+          className={`w-full flex items-center gap-2 px-3 py-2 text-xs rounded-md transition-colors ${
+            isSettingsActive
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              : "text-slate-500 hover:bg-white/[0.03] hover:text-white border border-transparent"
+          }`}
+        >
           <Settings className="w-3.5 h-3.5" />
           Workspace Settings
-        </button>
+        </Link>
       </div>
     </aside>
   );

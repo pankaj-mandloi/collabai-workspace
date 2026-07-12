@@ -38,6 +38,10 @@ interface WorkspaceState {
     workspaceId: string,
     payload: InviteMemberPayload
   ) => Promise<void>;
+  cancelInvitation: (
+    workspaceId: string,
+    invitationId: string
+  ) => Promise<void>;
   removeMember: (workspaceId: string, memberId: string) => Promise<void>;
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   clearError: () => void;
@@ -217,6 +221,39 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       },
 
       // ============================================
+      // CANCEL INVITATION
+      // ============================================
+
+      cancelInvitation: async (
+        workspaceId: string,
+        invitationId: string
+      ) => {
+        set({ error: null });
+        try {
+          const updatedWorkspace = await workspaceService.cancelInvitation(
+            workspaceId,
+            invitationId
+          );
+          set((state) => ({
+            workspaces: state.workspaces.map((w) =>
+              w._id === workspaceId ? updatedWorkspace : w
+            ),
+            currentWorkspace:
+              state.currentWorkspace?._id === workspaceId
+                ? updatedWorkspace
+                : state.currentWorkspace,
+          }));
+          console.log("✅ Invitation cancelled");
+        } catch (error: any) {
+          const message =
+            error.response?.data?.message || "Failed to cancel invitation";
+          set({ error: message });
+          console.error("❌ Cancel invitation error:", message);
+          throw error;
+        }
+      },
+
+      // ============================================
       // REMOVE MEMBER
       // ============================================
 
@@ -271,7 +308,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 // ============================================
 
 /**
- * Get workspace by ID from store (without triggering re-fetch)
+ * Get workspace by ID from store
  */
 export const useWorkspaceById = (id: string | null) => {
   return useWorkspaceStore((state) =>

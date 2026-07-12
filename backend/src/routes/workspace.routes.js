@@ -56,32 +56,38 @@ router.delete(
 // INVITATION ROUTES
 // ============================================
 
-// POST /api/v1/workspaces/:id/invitations
+// POST /api/v1/workspaces/:id/invitations - Invite member
 router.post(
   "/:id/invitations",
   validate(inviteMemberSchema),
   workspaceController.inviteMember
 );
 
-// POST /api/v1/workspaces/:id/invitations/:invitationId/accept
+// POST /api/v1/workspaces/:id/invitations/:invitationId/accept - Accept
 router.post(
   "/:id/invitations/:invitationId/accept",
   validate(acceptInvitationSchema),
   workspaceController.acceptInvitation
 );
 
+// DELETE /api/v1/workspaces/:id/invitations/:invitationId - Cancel
+router.delete(
+  "/:id/invitations/:invitationId",
+  workspaceController.cancelInvitation
+);
+
 // ============================================
 // MEMBER MANAGEMENT ROUTES
 // ============================================
 
-// DELETE /api/v1/workspaces/:id/members/:memberId
+// DELETE /api/v1/workspaces/:id/members/:memberId - Remove member
 router.delete(
   "/:id/members/:memberId",
   validate(removeMemberSchema),
   workspaceController.removeMember
 );
 
-// PATCH /api/v1/workspaces/:id/members/:memberId/role
+// PATCH /api/v1/workspaces/:id/members/:memberId/role - Update role
 router.patch(
   "/:id/members/:memberId/role",
   validate(updateMemberRoleSchema),

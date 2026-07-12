@@ -14,12 +14,18 @@ import {
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { WorkspaceCard } from "@/components/features/workspace/workspace-card";
 import { CreateWorkspaceDialog } from "@/components/features/workspace/create-workspace-dialog";
+import { PendingInvitations } from "@/components/features/workspace/pending-invitations";
 import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
-  const { workspaces, isLoading, error, fetchWorkspaces, clearError } =
-    useWorkspaceStore();
+  const {
+    workspaces,
+    isLoading,
+    error,
+    fetchWorkspaces,
+    clearError,
+  } = useWorkspaceStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -28,7 +34,10 @@ export default function DashboardPage() {
   }, [fetchWorkspaces]);
 
   // Calculate total members across all workspaces
-  const totalMembers = workspaces.reduce((acc, w) => acc + w.members.length, 0);
+  const totalMembers = workspaces.reduce(
+    (acc, w) => acc + w.members.length,
+    0
+  );
 
   if (!isLoaded) {
     return (
@@ -123,6 +132,9 @@ export default function DashboardPage() {
             </Button>
           </div>
         )}
+
+        {/* Pending Invitations */}
+        <PendingInvitations />
 
         {/* Workspaces Section */}
         <div>
@@ -229,12 +241,11 @@ function StatCard({
   description,
   showPulse,
 }: StatCardProps) {
-  // Different sizes for numbers vs text values
   const isNumber = typeof value === "number";
 
   return (
     <div className="group relative rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 hover:bg-white/[0.05] hover:border-emerald-500/20 transition-all flex flex-col">
-      {/* Icon Row - Fixed Height */}
+      {/* Icon Row */}
       <div className="flex items-start justify-between mb-4 h-9">
         <div
           className={`w-9 h-9 rounded-lg border flex items-center justify-center ${iconBg}`}
@@ -246,7 +257,7 @@ function StatCard({
         )}
       </div>
 
-      {/* Value - Fixed Height Container */}
+      {/* Value */}
       <div className="h-9 flex items-center mb-2">
         <div
           className={`font-semibold text-white tracking-tight leading-none ${
@@ -257,7 +268,7 @@ function StatCard({
         </div>
       </div>
 
-      {/* Title - Fixed Height */}
+      {/* Title */}
       <div className="text-xs text-slate-400 font-medium mb-1 h-4 flex items-center">
         {title}
       </div>

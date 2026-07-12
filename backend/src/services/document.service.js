@@ -47,6 +47,19 @@ class DocumentService {
         .populate("collaborators.user", "firstName lastName email avatar");
 
       console.log(`✅ Document created: ${document.title}`);
+      // Auto-embed document for RAG (async)
+      try {
+        const { getRAGService } = await import("./rag.service.js");
+        const ragService = getRAGService();
+        ragService
+          .embedDocument(document._id)
+          .catch((err) =>
+            console.error("Auto-embed document failed:", err.message),
+          );
+      } catch (embedError) {
+        console.error("Embedding init failed:", embedError.message);
+      }
+
       return document;
     } catch (error) {
       console.error("❌ Error creating document:", error.message);
@@ -149,6 +162,21 @@ class DocumentService {
         .populate("lastEditedBy", "firstName lastName email avatar");
 
       console.log(`✅ Document updated: ${updated.title}`);
+
+      // Re-embed document if content changed
+      if (data.content !== undefined || data.title !== undefined) {
+        try {
+          const { getRAGService } = await import("./rag.service.js");
+          const ragService = getRAGService();
+          ragService
+            .embedDocument(updated._id)
+            .catch((err) =>
+              console.error("Auto-embed document failed:", err.message),
+            );
+        } catch (embedError) {
+          console.error("Embedding init failed:", embedError.message);
+        }
+      }
       return updated;
     } catch (error) {
       console.error("❌ Error updating document:", error.message);
@@ -212,13 +240,13 @@ class DocumentService {
 
       const userIdStr = userId.toString();
       const isStarred = document.starredBy.some(
-        (id) => id.toString() === userIdStr
+        (id) => id.toString() === userIdStr,
       );
 
       if (isStarred) {
         // Remove star
         document.starredBy = document.starredBy.filter(
-          (id) => id.toString() !== userIdStr
+          (id) => id.toString() !== userIdStr,
         );
       } else {
         // Add star

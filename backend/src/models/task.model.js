@@ -183,6 +183,9 @@ taskSchema.index({ workspace: 1, isDeleted: 1 });
 taskSchema.index({ assignees: 1 });
 taskSchema.index({ dueDate: 1 });
 
+// Text index for AI text search (enables $regex efficient searches)
+taskSchema.index({ title: "text", description: "text" });
+
 // Virtual for checklist progress
 taskSchema.virtual("checklistProgress").get(function () {
   if (!this.checklist || this.checklist.length === 0) return null;

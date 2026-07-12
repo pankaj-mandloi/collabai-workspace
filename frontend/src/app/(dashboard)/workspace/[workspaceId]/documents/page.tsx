@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, Star, Loader2, MoreVertical, Trash2 } from "lucide-react";
+import { FileText, Plus, Star, Loader2, Trash2 } from "lucide-react";
 import { useDocumentStore, useWorkspaceDocuments } from "@/store/document.store";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -80,7 +80,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="fixed inset-0 top-[64px] left-64 right-0 flex flex-col bg-[#070908]">
+    <div className="flex-1 flex flex-col bg-[#070908] overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/[0.03] rounded-full blur-[100px] pointer-events-none" />
 
@@ -94,7 +94,8 @@ export default function DocumentsPage() {
             <div>
               <h1 className="font-semibold text-white text-base">Documents</h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                {documents.length} {documents.length === 1 ? "document" : "documents"}
+                {documents.length}{" "}
+                {documents.length === 1 ? "document" : "documents"}
               </p>
             </div>
           </div>
@@ -137,7 +138,7 @@ export default function DocumentsPage() {
               No documents yet
             </h3>
             <p className="text-sm text-slate-400 mb-6">
-              Create your first document to start writing and collaborating.
+              Create your first document to start writing.
             </p>
             <Button
               onClick={handleCreateDocument}
@@ -161,7 +162,9 @@ export default function DocumentsPage() {
                 <div
                   key={doc._id}
                   onClick={() =>
-                    router.push(`/workspace/${workspaceId}/documents/${doc._id}`)
+                    router.push(
+                      `/workspace/${workspaceId}/documents/${doc._id}`
+                    )
                   }
                   className="group bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] hover:border-emerald-500/30 rounded-lg p-4 cursor-pointer transition-all flex items-center gap-4"
                 >
@@ -173,7 +176,10 @@ export default function DocumentsPage() {
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5">
                       Edited by {editorName} •{" "}
-                      {format(new Date(doc.updatedAt), "MMM d, yyyy 'at' h:mm a")}
+                      {format(
+                        new Date(doc.updatedAt),
+                        "MMM d, yyyy 'at' h:mm a"
+                      )}
                       {doc.wordCount > 0 && ` • ${doc.wordCount} words`}
                     </p>
                   </div>
@@ -226,13 +232,11 @@ export default function DocumentsPage() {
                   Delete Document?
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400 text-sm mt-1">
-                  This document will be permanently deleted. This action cannot
-                  be undone.
+                  This action cannot be undone.
                 </AlertDialogDescription>
               </div>
             </div>
           </AlertDialogHeader>
-
           <AlertDialogFooter className="gap-3 flex-row justify-end">
             <AlertDialogCancel
               disabled={isDeleting}

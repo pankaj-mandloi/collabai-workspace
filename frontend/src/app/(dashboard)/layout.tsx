@@ -2,12 +2,17 @@
 
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { User } from "lucide-react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isProfilePage = pathname === "/profile";
+
   return (
     <div className="min-h-screen bg-[#070908] text-white relative">
       {/* Ambient background */}
@@ -19,6 +24,7 @@ export default function DashboardLayout({
       {/* Top Navigation */}
       <nav className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#070908]/70 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
           <Link
             href="/dashboard"
             className="flex items-center gap-2 text-xl font-semibold tracking-tight"
@@ -29,7 +35,22 @@ export default function DashboardLayout({
             <span className="text-slate-100">CollabAI</span>
           </Link>
 
+          {/* Right Side */}
           <div className="flex items-center gap-4">
+            {/* Profile Link */}
+            <Link
+              href="/profile"
+              className={`flex items-center gap-1.5 text-sm transition-colors ${
+                isProfilePage
+                  ? "text-emerald-400"
+                  : "text-slate-400 hover:text-emerald-400"
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden md:inline">Profile</span>
+            </Link>
+
+            {/* User Button */}
             <UserButton
               appearance={{
                 elements: {

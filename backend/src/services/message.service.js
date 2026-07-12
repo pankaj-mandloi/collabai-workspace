@@ -8,83 +8,96 @@ class MessageService {
    * Only workspace members can send
    */
   async sendMessage(data, user) {
-  try {
-    const { content, workspaceId, replyTo, attachments } = data;
+    try {
+      const { content, workspaceId, replyTo, attachments } = data;
 
-    // Validate content
-    if (!content || content.trim().length === 0) {
-      throw new ApiError(400, "Message content is required");
+      // Validate content
+      if (!content || content.trim().length === 0) {
+        throw new ApiError(400, "Message content is required");
+      }
+
+      if (content.length > 5000) {
+        throw new ApiError(400, "Message too long (max 5000 characters)");
+      }
+
+      // Verify workspace exists and user is member
+      // Populate members.user so we can extract emails for mentions
+      const workspace = await Workspace.findById(workspaceId).populate(
+        "members.user",
+        "email username firstName lastName",
+      );
+
+      if (!workspace) {
+        throw new ApiError(404, "Workspace not found");
+      }
+
+      if (!workspace.isActive) {
+        throw new ApiError(404, "Workspace no longer active");
+      }
+
+      if (!workspace.isMember(user._id)) {
+        throw new ApiError(403, "You are not a member of this workspace");
+      }
+
+      // Extract mentions from content (e.g., @username)
+      const mentionMatches = content.match(/@(\w+)/g) || [];
+      const mentionUsernames = mentionMatches.map((m) => m.substring(1));
+
+      // Find mentioned users from workspace members
+      const mentionedUsers = workspace.members
+        .filter((m) => {
+          if (!m.user) return false;
+          const username = m.user.username || m.user.email?.split("@")[0] || "";
+          return mentionUsernames.includes(username);
+        })
+        .map((m) => m.user._id);
+
+      // Create message
+      let message = await Message.create({
+        content: content.trim(),
+        type: "text",
+        sender: user._id,
+        workspace: workspaceId,
+        replyTo: replyTo || null,
+        attachments: attachments || [],
+        mentions: mentionedUsers,
+      });
+
+      // Populate for real-time broadcast
+      message = await Message.findById(message._id)
+        .populate("sender", "firstName lastName email avatar username")
+        .populate({
+          path: "replyTo",
+          populate: {
+            path: "sender",
+            select: "firstName lastName email avatar",
+          },
+        })
+        .populate("mentions", "firstName lastName email avatar");
+
+      console.log(
+        `✅ Message sent by ${user.email} in workspace ${workspace.name}`,
+      );
+      // Auto-embed message for RAG (async, don't wait)
+      try {
+        const { getRAGService } = await import("./rag.service.js");
+        const ragService = getRAGService();
+        ragService
+          .embedMessage(message._id)
+          .catch((err) =>
+            console.error("Auto-embed message failed:", err.message),
+          );
+      } catch (embedError) {
+        // Don't fail message send if embedding fails
+        console.error("Embedding init failed:", embedError.message);
+      }
+
+      return message;
+    } catch (error) {
+      console.error("❌ Error sending message:", error.message);
+      throw error;
     }
-
-    if (content.length > 5000) {
-      throw new ApiError(400, "Message too long (max 5000 characters)");
-    }
-
-    // Verify workspace exists and user is member
-    // Populate members.user so we can extract emails for mentions
-    const workspace = await Workspace.findById(workspaceId).populate(
-      "members.user",
-      "email username firstName lastName"
-    );
-
-    if (!workspace) {
-      throw new ApiError(404, "Workspace not found");
-    }
-
-    if (!workspace.isActive) {
-      throw new ApiError(404, "Workspace no longer active");
-    }
-
-    if (!workspace.isMember(user._id)) {
-      throw new ApiError(403, "You are not a member of this workspace");
-    }
-
-    // Extract mentions from content (e.g., @username)
-    const mentionMatches = content.match(/@(\w+)/g) || [];
-    const mentionUsernames = mentionMatches.map((m) => m.substring(1));
-
-    // Find mentioned users from workspace members
-    const mentionedUsers = workspace.members
-      .filter((m) => {
-        if (!m.user) return false;
-        const username =
-          m.user.username || m.user.email?.split("@")[0] || "";
-        return mentionUsernames.includes(username);
-      })
-      .map((m) => m.user._id);
-
-    // Create message
-    let message = await Message.create({
-      content: content.trim(),
-      type: "text",
-      sender: user._id,
-      workspace: workspaceId,
-      replyTo: replyTo || null,
-      attachments: attachments || [],
-      mentions: mentionedUsers,
-    });
-
-    // Populate for real-time broadcast
-    message = await Message.findById(message._id)
-      .populate("sender", "firstName lastName email avatar username")
-      .populate({
-        path: "replyTo",
-        populate: {
-          path: "sender",
-          select: "firstName lastName email avatar",
-        },
-      })
-      .populate("mentions", "firstName lastName email avatar");
-
-    console.log(
-      `✅ Message sent by ${user.email} in workspace ${workspace.name}`
-    );
-    return message;
-  } catch (error) {
-    console.error("❌ Error sending message:", error.message);
-    throw error;
   }
-}
 
   /**
    * Get workspace messages with pagination
@@ -211,7 +224,7 @@ class MessageService {
       if (!message.canEdit(userId)) {
         throw new ApiError(
           403,
-          "Cannot edit message (either not sender or edit window expired)"
+          "Cannot edit message (either not sender or edit window expired)",
         );
       }
 
@@ -291,7 +304,7 @@ class MessageService {
       if (existingReaction) {
         // Toggle: if user already reacted, remove. Otherwise add.
         const userIndex = existingReaction.users.findIndex(
-          (u) => u.toString() === userId.toString()
+          (u) => u.toString() === userId.toString(),
         );
 
         if (userIndex > -1) {
@@ -300,7 +313,7 @@ class MessageService {
           // Remove reaction entry if no users left
           if (existingReaction.users.length === 0) {
             message.reactions = message.reactions.filter(
-              (r) => r.emoji !== emoji
+              (r) => r.emoji !== emoji,
             );
           }
         } else {

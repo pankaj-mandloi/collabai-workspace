@@ -123,6 +123,18 @@ const documentSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Vector embedding for RAG (AI semantic search)
+    embedding: {
+      type: [Number],
+      default: null,
+      select: false, // Don't return in normal queries (large field)
+    },
+    embeddingGeneratedAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     // Soft delete
     isDeleted: {
       type: Boolean,
@@ -159,7 +171,6 @@ documentSchema.index({ parent: 1 });
 // Virtual for excerpt (first 200 characters)
 documentSchema.virtual("excerpt").get(function () {
   if (!this.content) return "";
-  // Strip HTML tags and get first 200 chars
   const text = this.content.replace(/<[^>]*>/g, "");
   return text.length > 200 ? text.substring(0, 200) + "..." : text;
 });
@@ -168,10 +179,8 @@ documentSchema.virtual("excerpt").get(function () {
 documentSchema.methods.hasAccess = function (userId) {
   const userIdStr = userId.toString();
 
-  // Creator always has access
   if (this.createdBy.toString() === userIdStr) return true;
 
-  // Check collaborators
   return this.collaborators.some((c) => {
     const cId = c.user._id ? c.user._id.toString() : c.user.toString();
     return cId === userIdStr;
@@ -182,10 +191,8 @@ documentSchema.methods.hasAccess = function (userId) {
 documentSchema.methods.canEdit = function (userId) {
   const userIdStr = userId.toString();
 
-  // Creator can always edit
   if (this.createdBy.toString() === userIdStr) return true;
 
-  // Check collaborator permissions
   const collab = this.collaborators.find((c) => {
     const cId = c.user._id ? c.user._id.toString() : c.user.toString();
     return cId === userIdStr;
@@ -203,7 +210,6 @@ documentSchema.methods.isStarredBy = function (userId) {
 // Calculate word count on save
 documentSchema.pre("save", function (next) {
   if (this.isModified("content")) {
-    // Strip HTML tags and count words
     const text = this.content.replace(/<[^>]*>/g, "").trim();
     this.wordCount = text ? text.split(/\s+/).length : 0;
     this.lastSavedAt = new Date();

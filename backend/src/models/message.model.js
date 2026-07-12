@@ -96,6 +96,18 @@ const messageSchema = new mongoose.Schema(
       },
     ],
 
+    // Vector embedding for RAG (AI semantic search)
+    embedding: {
+      type: [Number],
+      default: null,
+      select: false, // Don't return in normal queries (large field)
+    },
+    embeddingGeneratedAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     // Edit tracking
     isEdited: {
       type: Boolean,

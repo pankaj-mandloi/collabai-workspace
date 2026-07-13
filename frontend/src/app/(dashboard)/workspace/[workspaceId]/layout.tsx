@@ -61,7 +61,6 @@ export default function WorkspaceLayout({
     };
 
     join();
-
     return () => {
       leaveWorkspace(workspaceId);
     };
@@ -128,7 +127,9 @@ export default function WorkspaceLayout({
               <AlertCircle className="w-6 h-6 text-red-400" />
             </div>
             <div>
-              <h3 className="text-white font-semibold text-lg mb-1">Access Denied</h3>
+              <h3 className="text-white font-semibold text-lg mb-1">
+                Access Denied
+              </h3>
               <p className="text-slate-400 text-sm">{joinError}</p>
             </div>
           </div>
@@ -146,15 +147,15 @@ export default function WorkspaceLayout({
 
   return (
     <div className="fixed inset-0 top-[64px] flex bg-[#070908]">
-      {/* Left Sidebar — Always Visible */}
+      {/* Left Sidebar */}
       <WorkspaceSidebar workspace={currentWorkspace} />
 
-      {/* Main Content — Changes Per Page */}
+      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {children}
       </div>
 
-      {/* Right Sidebar — Always Visible */}
+      {/* Right Sidebar */}
       <MembersSidebar workspace={currentWorkspace} />
     </div>
   );

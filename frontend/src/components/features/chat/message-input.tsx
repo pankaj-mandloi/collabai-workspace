@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2 } from "lucide-react";
 import { useSocket } from "@/providers/socket-provider";
+import { FileUploadButton } from "./file-upload-button";
 import { toast } from "sonner";
 
 interface MessageInputProps {
@@ -15,10 +16,17 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
   const { socket, isConnected } = useSocket();
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState<{
+    url: string;
+    name: string;
+    type: string;
+    size: number;
+  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
 
+  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -29,6 +37,7 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
     }
   }, [content]);
 
+  // Cleanup typing on unmount
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
@@ -40,6 +49,7 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
     };
   }, [socket, workspaceId]);
 
+  // Handle typing indicators
   const handleTyping = () => {
     if (!socket || !isConnected) return;
 
@@ -60,28 +70,72 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
     }, 2000);
   };
 
-  const sendMessage = () => {
-    const trimmedContent = content.trim();
+  // Handle file upload complete
+  const handleFileUpload = (
+    url: string,
+    name: string,
+    type: string,
+    size: number
+  ) => {
+    setPendingAttachment({ url, name, type, size });
 
-    if (!trimmedContent) return;
+    // Auto-send image with optional caption
+    if (type === "image") {
+      sendMessageWithAttachment("", { url, name, type, size });
+    }
+  };
+
+  // Send message with optional attachment
+  const sendMessageWithAttachment = (
+    text: string,
+    attachment?: { url: string; name: string; type: string; size: number }
+  ) => {
     if (!socket || !isConnected) {
-      toast.error("Not connected", {
-        description: "Please wait for connection to be established",
-      });
+      toast.error("Not connected");
       return;
     }
-    if (isSending) return;
+
+    const trimmedContent = text.trim();
+    const hasContent = trimmedContent.length > 0;
+    const hasAttachment = !!attachment;
+
+    if (!hasContent && !hasAttachment) return;
 
     setIsSending(true);
 
+    // Build message content
+    let messageContent = trimmedContent;
+    if (hasAttachment) {
+      if (attachment.type === "image") {
+        messageContent = trimmedContent || `📷 Shared an image: ${attachment.name}`;
+      } else {
+        messageContent = trimmedContent || `📎 Shared a file: ${attachment.name}`;
+      }
+    }
+
     socket.emit(
       "message:send",
-      { content: trimmedContent, workspaceId },
+      {
+        content: messageContent,
+        workspaceId,
+        attachments: hasAttachment
+          ? [
+              {
+                type: attachment.type,
+                url: attachment.url,
+                name: attachment.name,
+                size: attachment.size,
+              },
+            ]
+          : [],
+      },
       (response: { success: boolean; error?: string }) => {
         setIsSending(false);
 
         if (response.success) {
           setContent("");
+          setPendingAttachment(null);
+
           if (isTypingRef.current) {
             socket.emit("typing:stop", { workspaceId });
             isTypingRef.current = false;
@@ -89,6 +143,7 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
           if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
           }
+
           textareaRef.current?.focus();
         } else {
           toast.error("Failed to send", {
@@ -97,6 +152,26 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
         }
       }
     );
+  };
+
+  // Send text message
+  const sendMessage = () => {
+    const trimmedContent = content.trim();
+
+    if (!trimmedContent && !pendingAttachment) return;
+    if (!socket || !isConnected) {
+      toast.error("Not connected", {
+        description: "Please wait for connection",
+      });
+      return;
+    }
+    if (isSending) return;
+
+    if (pendingAttachment) {
+      sendMessageWithAttachment(trimmedContent, pendingAttachment);
+    } else {
+      sendMessageWithAttachment(trimmedContent);
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -108,7 +183,38 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
 
   return (
     <div className="relative px-6 py-4 border-t border-white/[0.06] bg-[#070908]/50 backdrop-blur-xl">
+      {/* Pending Attachment Preview */}
+      {pendingAttachment && pendingAttachment.type !== "image" && (
+        <div className="mb-2 flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-lg p-2">
+          <div className="w-8 h-8 rounded bg-emerald-500/10 flex items-center justify-center">
+            <span className="text-xs">📎</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-white truncate">
+              {pendingAttachment.name}
+            </p>
+            <p className="text-[10px] text-slate-500">
+              {(pendingAttachment.size / 1024).toFixed(1)} KB
+            </p>
+          </div>
+          <button
+            onClick={() => setPendingAttachment(null)}
+            className="text-slate-400 hover:text-red-400 text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Input Row */}
       <div className="flex items-end gap-2">
+        {/* File Upload Button */}
+        <FileUploadButton
+          onUpload={handleFileUpload}
+          disabled={!isConnected || isSending}
+        />
+
+        {/* Text Input */}
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
@@ -134,10 +240,15 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
           )}
         </div>
 
+        {/* Send Button */}
         <Button
           onClick={sendMessage}
-          disabled={!content.trim() || !isConnected || isSending}
-          className="h-[42px] px-4 bg-emerald-500 hover:bg-emerald-400 text-black font-medium shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:shadow-none"
+          disabled={
+            (!content.trim() && !pendingAttachment) ||
+            !isConnected ||
+            isSending
+          }
+          className="h-[42px] px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-medium disabled:opacity-50"
         >
           {isSending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -147,6 +258,7 @@ export function MessageInput({ workspaceId }: MessageInputProps) {
         </Button>
       </div>
 
+      {/* Status */}
       <p className="text-[10px] text-slate-600 mt-2 px-1 flex items-center gap-1.5">
         {isConnected ? (
           <>

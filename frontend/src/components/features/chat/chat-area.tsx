@@ -56,7 +56,7 @@ export function ChatArea({ workspace }: ChatAreaProps) {
         <MessageInput workspaceId={workspace._id} />
       </div>
 
-      {/* AI Chat Panel (Slack/Notion style) */}
+      {/* AI Chat Panel */}
       <AIChatPanel
         workspaceId={workspace._id}
         isOpen={isAIPanelOpen}

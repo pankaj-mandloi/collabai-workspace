@@ -205,7 +205,7 @@ class MessageService {
    * Edit message
    * Only sender can edit within 15 minutes
    */
-  async editMessage(messageId, content, userId) {
+   async editMessage(messageId, content, userId) {
     try {
       if (!content || content.trim().length === 0) {
         throw new ApiError(400, "Message content is required");
@@ -224,7 +224,7 @@ class MessageService {
       if (!message.canEdit(userId)) {
         throw new ApiError(
           403,
-          "Cannot edit message (either not sender or edit window expired)",
+          "Cannot edit message (either not sender or edit window expired)"
         );
       }
 
@@ -235,11 +235,8 @@ class MessageService {
 
       // Return populated message
       const updatedMessage = await Message.findById(messageId)
-        .populate("sender", "firstName lastName email avatar username")
-        .populate("workspace", "name slug")
-        .populate("mentions", "firstName lastName email avatar");
+        .populate("sender", "firstName lastName email avatar username");
 
-      console.log(`✅ Message edited by user ${userId}`);
       return updatedMessage;
     } catch (error) {
       console.error("❌ Error editing message:", error.message);

@@ -5,6 +5,7 @@ import messageRoutes from "./message.routes.js";
 import taskRoutes from "./task.routes.js";
 import documentRoutes from "./document.routes.js";
 import aiRoutes from "./ai.routes.js";
+import notificationRoutes from "./notification.routes.js";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/messages", messageRoutes);
 router.use("/tasks", taskRoutes);
 router.use("/documents", documentRoutes);
 router.use("/ai", aiRoutes);
+router.use("/notifications", notificationRoutes);
 
 export default router;

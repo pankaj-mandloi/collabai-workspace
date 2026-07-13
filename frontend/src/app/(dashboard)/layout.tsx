@@ -4,6 +4,8 @@ import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
+import { SearchCommand } from "@/components/shared/search-command";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 export default function DashboardLayout({
   children,
@@ -12,13 +14,14 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isProfilePage = pathname === "/profile";
+  const isInWorkspace = pathname.includes("/workspace/");
 
   return (
     <div className="min-h-screen bg-[#070908] text-white relative">
       {/* Ambient background */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-emerald-900/20 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Subtle grid overlay */}
+      {/* Grid overlay */}
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#1a1f1c_1px,transparent_1px),linear-gradient(to_bottom,#1a1f1c_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_40%_at_50%_0%,#000_50%,transparent_100%)] opacity-30 pointer-events-none" />
 
       {/* Top Navigation */}
@@ -35,8 +38,14 @@ export default function DashboardLayout({
             <span className="text-slate-100">CollabAI</span>
           </Link>
 
+          {/* Center — Search Bar (Only in Workspace) */}
+          {isInWorkspace && <SearchCommand />}
+
           {/* Right Side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <NotificationBell />
+
             {/* Profile Link */}
             <Link
               href="/profile"

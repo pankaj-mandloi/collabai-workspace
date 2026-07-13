@@ -15,26 +15,30 @@ export function MessageList({ workspaceId }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch messages on mount
   useEffect(() => {
     fetchMessages(workspaceId);
   }, [workspaceId]);
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  const groupedMessages = messages.reduce((acc: any[], msg, idx) => {
+  // Group consecutive messages from same sender (within 3 min)
+  const groupedMessages = messages.map((msg, idx) => {
     const prevMsg = messages[idx - 1];
     const isGrouped =
       prevMsg &&
+      !prevMsg.isDeleted &&
+      !msg.isDeleted &&
       prevMsg.sender._id === msg.sender._id &&
       new Date(msg.createdAt).getTime() -
         new Date(prevMsg.createdAt).getTime() <
-        5 * 60 * 1000;
+        3 * 60 * 1000; // 3 min gap (tighter grouping)
 
-    acc.push({ ...msg, isGrouped });
-    return acc;
-  }, []);
+    return { ...msg, isGrouped };
+  });
 
   // Loading state
   if (isLoading && messages.length === 0) {
@@ -70,10 +74,10 @@ export function MessageList({ workspaceId }: MessageListProps) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-8 h-8 text-emerald-400" />
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+            <MessageSquare className="w-7 h-7 text-emerald-400" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">
+          <h3 className="text-lg font-semibold text-white mb-2">
             Start the conversation
           </h3>
           <p className="text-sm text-slate-400">
@@ -87,9 +91,12 @@ export function MessageList({ workspaceId }: MessageListProps) {
   return (
     <div
       ref={scrollContainerRef}
-      className="relative flex-1 overflow-y-auto py-4"
+      className="relative flex-1 overflow-y-auto pb-2"
       style={{ scrollBehavior: "smooth" }}
     >
+      {/* Top spacing */}
+      <div className="h-2" />
+
       {groupedMessages.map((message: any) => (
         <MessageBubble
           key={message._id}
@@ -97,7 +104,9 @@ export function MessageList({ workspaceId }: MessageListProps) {
           isGrouped={message.isGrouped}
         />
       ))}
-      <div ref={bottomRef} />
+
+      {/* Bottom anchor for auto-scroll */}
+      <div ref={bottomRef} className="h-1" />
     </div>
   );
 }

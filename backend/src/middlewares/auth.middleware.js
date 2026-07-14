@@ -3,17 +3,10 @@ import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-// Clerk middleware (attaches auth info to req)
-export const clerkAuthMiddleware = (req, res, next) => {
-  // Clerk express middleware handles this
-  next();
-};
-
 // Protect routes (require authentication)
 export const protect = asyncHandler(async (req, res, next) => {
   const { userId } = getAuth(req);
   
-  // ✅ Debug log
   console.log("🔍 Auth check - userId:", userId);
   
   if (!userId) {
@@ -26,7 +19,7 @@ export const protect = asyncHandler(async (req, res, next) => {
     throw new ApiError(404, "User not found in database");
   }
 
-  // Attach user to request for controllers to use
+  // Attach user to request
   req.user = user;
   req.clerkUserId = userId;
 

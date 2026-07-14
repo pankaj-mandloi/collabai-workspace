@@ -17,10 +17,22 @@ api.interceptors.request.use(
     if (typeof window !== "undefined") {
       const clerk = (window as any).Clerk;
       if (clerk?.session) {
-        const token = await clerk.session.getToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        try {
+          // ✅ Force fresh token with skipCache
+          const token = await clerk.session.getToken({ 
+            skipCache: true 
+          });
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            console.log("✅ Token attached:", token.substring(0, 20) + "...");
+          } else {
+            console.log("⚠️ No token found");
+          }
+        } catch (error) {
+          console.error("❌ Error getting token:", error);
         }
+      } else {
+        console.log("⚠️ Clerk not initialized or no session");
       }
     }
     return config;

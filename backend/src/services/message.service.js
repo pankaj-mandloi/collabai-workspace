@@ -64,16 +64,17 @@ class MessageService {
       });
 
       // Populate for real-time broadcast
+      // message.service.js - sendMessage method
       message = await Message.findById(message._id)
-        .populate("sender", "firstName lastName email avatar username")
+        .populate("sender", "firstName lastName email avatar username status") // ✅ status added
         .populate({
           path: "replyTo",
           populate: {
             path: "sender",
-            select: "firstName lastName email avatar",
+            select: "firstName lastName email avatar status", // ✅ status added
           },
         })
-        .populate("mentions", "firstName lastName email avatar");
+        .populate("mentions", "firstName lastName email avatar status"); // ✅ status added
 
       console.log(
         `✅ Message sent by ${user.email} in workspace ${workspace.name}`,
@@ -205,7 +206,7 @@ class MessageService {
    * Edit message
    * Only sender can edit within 15 minutes
    */
-   async editMessage(messageId, content, userId) {
+  async editMessage(messageId, content, userId) {
     try {
       if (!content || content.trim().length === 0) {
         throw new ApiError(400, "Message content is required");
@@ -224,7 +225,7 @@ class MessageService {
       if (!message.canEdit(userId)) {
         throw new ApiError(
           403,
-          "Cannot edit message (either not sender or edit window expired)"
+          "Cannot edit message (either not sender or edit window expired)",
         );
       }
 
@@ -234,8 +235,10 @@ class MessageService {
       await message.save();
 
       // Return populated message
-      const updatedMessage = await Message.findById(messageId)
-        .populate("sender", "firstName lastName email avatar username");
+      const updatedMessage = await Message.findById(messageId).populate(
+        "sender",
+        "firstName lastName email avatar username",
+      );
 
       return updatedMessage;
     } catch (error) {

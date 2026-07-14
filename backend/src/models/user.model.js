@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+// ✅ User Status Enum
+export const USER_STATUS = {
+  ONLINE: "online",
+  AWAY: "away",
+  BUSY: "busy",
+  OFFLINE: "offline",
+};
+
 const userSchema = new mongoose.Schema(
   {
     clerkId: {
@@ -52,6 +60,19 @@ const userSchema = new mongoose.Schema(
     lastActive: {
       type: Date,
       default: Date.now,
+    },
+    // ✅ NEW: User Status Field
+    status: {
+      type: String,
+      enum: Object.values(USER_STATUS),
+      default: USER_STATUS.ONLINE,
+    },
+    // ✅ NEW: Custom status message (optional)
+    statusMessage: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
     },
   },
   {

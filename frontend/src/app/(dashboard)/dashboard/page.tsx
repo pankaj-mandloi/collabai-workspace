@@ -149,7 +149,7 @@ export default function DashboardPage() {
             </div>
 
             <Button
-              className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-lg shadow-emerald-500/20 gap-2 h-10 px-6"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-lg shadow-emerald-500/20 gap-2 h-10 px-2"
               onClick={() => setIsCreateDialogOpen(true)}
             >
               <Plus className="w-4 h-4" />

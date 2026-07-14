@@ -4,6 +4,7 @@ import { Workspace } from "@/types/workspace.types";
 import { useWorkspaceOnlineUsers } from "@/store/message.store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Crown, Shield, Users } from "lucide-react";
+import { USER_STATUS } from "@/types/user.types";
 
 interface MembersSidebarProps {
   workspace: Workspace;
@@ -24,6 +25,20 @@ export function MembersSidebar({ workspace }: MembersSidebarProps) {
     if (role === "admin")
       return <Shield className="w-3 h-3 text-lime-400" />;
     return null;
+  };
+
+  // ✅ NEW: Get status color and emoji
+  const getStatusInfo = (status?: string) => {
+    const defaultStatus = { color: "bg-slate-500", emoji: "⚫", label: "Offline" };
+    if (!status) return defaultStatus;
+    
+    const statusMap: Record<string, { color: string; emoji: string; label: string }> = {
+      online: { color: "bg-emerald-400", emoji: "🟢", label: "Online" },
+      away: { color: "bg-yellow-400", emoji: "🟡", label: "Away" },
+      busy: { color: "bg-red-400", emoji: "🔴", label: "Busy" },
+      offline: { color: "bg-slate-500", emoji: "⚫", label: "Offline" },
+    };
+    return statusMap[status] || defaultStatus;
   };
 
   const sortedMembers = [...workspace.members].sort((a, b) => {
@@ -85,6 +100,7 @@ export function MembersSidebar({ workspace }: MembersSidebarProps) {
                   isOnline={true}
                   getInitials={getInitials}
                   getRoleIcon={getRoleIcon}
+                  getStatusInfo={getStatusInfo}
                 />
               ))}
           </>
@@ -105,6 +121,7 @@ export function MembersSidebar({ workspace }: MembersSidebarProps) {
                 isOnline={false}
                 getInitials={getInitials}
                 getRoleIcon={getRoleIcon}
+                getStatusInfo={getStatusInfo}
               />
             ))}
           </>
@@ -123,6 +140,7 @@ interface MemberItemProps {
   isOnline: boolean;
   getInitials: (firstName?: string, email?: string) => string;
   getRoleIcon: (role: string) => React.ReactNode;
+  getStatusInfo: (status?: string) => { color: string; emoji: string; label: string };
 }
 
 function MemberItem({
@@ -130,11 +148,16 @@ function MemberItem({
   isOnline,
   getInitials,
   getRoleIcon,
+  getStatusInfo,
 }: MemberItemProps) {
   const displayName =
     member.user.firstName ||
     member.user.email?.split("@")[0] ||
     "Unknown User";
+
+  // ✅ Get user status from member object
+  const userStatus = member.user?.status || "offline";
+  const statusInfo = getStatusInfo(userStatus);
 
   return (
     <div
@@ -151,9 +174,14 @@ function MemberItem({
             {getInitials(member.user.firstName, member.user.email)}
           </AvatarFallback>
         </Avatar>
-        {isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-lime-400 rounded-full border-2 border-[#0a0c0b]" />
-        )}
+        
+        {/* ✅ Status Dot - Shows actual user status */}
+        <div className="absolute -bottom-0.5 -right-0.5">
+          <div 
+            className={`w-2.5 h-2.5 rounded-full border-2 border-[#0a0c0b] ${statusInfo.color}`}
+            title={statusInfo.label}
+          />
+        </div>
       </div>
 
       <div className="flex-1 min-w-0">
@@ -162,6 +190,10 @@ function MemberItem({
             {displayName}
           </p>
           {getRoleIcon(member.role)}
+          {/* ✅ Show status emoji */}
+          <span className="text-[10px] ml-auto" title={statusInfo.label}>
+            {statusInfo.emoji}
+          </span>
         </div>
         <p className="text-[10px] text-slate-600 truncate">
           {member.user.email}

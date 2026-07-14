@@ -132,7 +132,7 @@ export default function Home() {
             <Link href="/dashboard">
               <Button
                 size="lg"
-                className="bg-emerald-500 hover:bg-emerald-400 text-black font-medium shadow-lg shadow-emerald-500/25 gap-2 px-8 h-12 transition-all group"
+                className="bg-emerald-500 hover:bg-emerald-400 text-black font-medium shadow-lg shadow-emerald-500/25 gap-2 px-4 h-12 transition-all group"
               >
                 Go to Dashboard
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -388,7 +388,7 @@ export default function Home() {
                 <Link href="/dashboard">
                   <Button
                     size="lg"
-                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-medium shadow-lg shadow-emerald-500/25 gap-2 px-8 h-12 group"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-medium shadow-lg shadow-emerald-500/25 gap-2 px-4 h-12 group"
                   >
                     Go to Dashboard
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useMessageStore, useWorkspaceMessages } from "@/store/message.store";
 import { MessageBubble } from "./message-bubble";
 import { MessageSquare } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageListProps {
   workspaceId: string;
@@ -43,11 +44,20 @@ export function MessageList({ workspaceId }: MessageListProps) {
   // Loading state
   if (isLoading && messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-7 h-7 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
-          <p className="text-xs text-slate-500">Loading messages...</p>
-        </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-start gap-3">
+            <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

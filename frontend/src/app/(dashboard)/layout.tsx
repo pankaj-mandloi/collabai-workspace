@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { User } from "lucide-react";
 import { SearchCommand } from "@/components/shared/search-command";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { StatusPicker } from "@/components/features/user/status-picker"; // ✅ ADD THIS
 
 export default function DashboardLayout({
   children,
@@ -58,6 +59,9 @@ export default function DashboardLayout({
               <User className="w-4 h-4" />
               <span className="hidden md:inline">Profile</span>
             </Link>
+
+            {/* ✅ Status Picker — Add this before UserButton */}
+            <StatusPicker />
 
             {/* User Button */}
             <UserButton

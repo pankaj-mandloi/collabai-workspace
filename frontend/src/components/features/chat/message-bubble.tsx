@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { MessageActions, EditBox } from "./message-actions";
 import { ReactionPicker, ReactionsDisplay } from "./reaction-picker";
 import { Download, FileIcon, ExternalLink } from "lucide-react";
+import { USER_STATUS } from "@/types/user.types";
 
 interface MessageBubbleProps {
   message: Message;
@@ -57,6 +58,23 @@ export function MessageBubble({
     message.content.startsWith("📷 Shared an image:") ||
     message.content.startsWith("📎 Shared a file:");
 
+  // ✅ Get sender status info
+  const getStatusInfo = (status?: string) => {
+    const defaultStatus = { color: "bg-slate-500", emoji: "⚫", label: "Offline" };
+    if (!status) return defaultStatus;
+    
+    const statusMap: Record<string, { color: string; emoji: string; label: string }> = {
+      online: { color: "bg-emerald-400", emoji: "🟢", label: "Online" },
+      away: { color: "bg-yellow-400", emoji: "🟡", label: "Away" },
+      busy: { color: "bg-red-400", emoji: "🔴", label: "Busy" },
+      offline: { color: "bg-slate-500", emoji: "⚫", label: "Offline" },
+    };
+    return statusMap[status] || defaultStatus;
+  };
+
+  const senderStatus = message.sender?.status || "offline";
+  const statusInfo = getStatusInfo(senderStatus);
+
   // Deleted message
   if (message.isDeleted) {
     return (
@@ -80,14 +98,21 @@ export function MessageBubble({
         {/* Avatar */}
         <div className="w-8 flex-shrink-0">
           {!isGrouped ? (
-            <Avatar className="w-8 h-8 border border-white/10">
-              {message.sender.avatar && (
-                <AvatarImage src={message.sender.avatar} alt={senderName} />
-              )}
-              <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-lime-400 text-black text-[10px] font-bold">
-                {getInitials(message.sender.firstName, message.sender.email)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="w-8 h-8 border border-white/10">
+                {message.sender.avatar && (
+                  <AvatarImage src={message.sender.avatar} alt={senderName} />
+                )}
+                <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-lime-400 text-black text-[10px] font-bold">
+                  {getInitials(message.sender.firstName, message.sender.email)}
+                </AvatarFallback>
+              </Avatar>
+              {/* ✅ Status Dot on Avatar */}
+              <div 
+                className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#070908] ${statusInfo.color}`}
+                title={statusInfo.label}
+              />
+            </div>
           ) : (
             <div className="w-8 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="text-[9px] text-slate-700">
@@ -108,6 +133,10 @@ export function MessageBubble({
                 }`}
               >
                 {senderName}
+                {/* ✅ Status Emoji next to name */}
+                <span className="ml-1 text-[10px]" title={statusInfo.label}>
+                  {statusInfo.emoji}
+                </span>
                 {isOwn && (
                   <span className="ml-1 text-[10px] text-slate-600 font-normal">
                     (you)

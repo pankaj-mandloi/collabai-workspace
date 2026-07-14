@@ -1,5 +1,6 @@
 import { SOCKET_EVENTS } from "../events.js";
 import Workspace from "../../models/workspace.model.js";
+import userService from "../../services/user.service.js"; // ✅ Import userService
 
 /**
  * Online users tracking
@@ -67,6 +68,7 @@ const registerPresenceHandlers = (io, socket) => {
           lastName: socket.user.lastName,
           email: socket.user.email,
           avatar: socket.user.avatar,
+          status: socket.user.status || "online", // ✅ Add status
         },
         workspaceId,
       });
@@ -130,6 +132,62 @@ const registerPresenceHandlers = (io, socket) => {
     });
 
     console.log(`👋 User left workspace ${workspaceId}`);
+  });
+
+  // ============================================
+  // ✅ NEW: User Status Update
+  // ============================================
+
+  /**
+   * Update user status and broadcast to all workspaces
+   * Data: { status, statusMessage }
+   */
+  socket.on("user:status", async ({ status, statusMessage }) => {
+    try {
+      if (!status) {
+        throw new Error("Status is required");
+      }
+
+      // Update user status in database
+      const updatedUser = await userService.updateStatus(
+        socket.userId,
+        status,
+        statusMessage || ""
+      );
+
+      // Broadcast to all workspaces user is in
+      const socketUser = socketUsers.get(socket.id);
+      if (socketUser) {
+        socketUser.workspaces.forEach((workspaceId) => {
+          const roomId = `workspace:${workspaceId}`;
+          socket.to(roomId).emit("user:status", {
+            userId: socket.userId,
+            user: {
+              _id: updatedUser._id,
+              firstName: updatedUser.firstName,
+              lastName: updatedUser.lastName,
+              email: updatedUser.email,
+              avatar: updatedUser.avatar,
+              status: updatedUser.status,
+              statusMessage: updatedUser.statusMessage || "",
+            },
+            workspaceId,
+          });
+        });
+      }
+
+      console.log(`🔄 User status updated: ${socket.user.email} → ${status}`);
+
+      // Also update online users list
+      // Update onlineUsers map with new status info if needed
+      // For now, just broadcast the status change
+    } catch (error) {
+      console.error("❌ Status update error:", error.message);
+      socket.emit(SOCKET_EVENTS.ERROR, {
+        event: "user:status",
+        message: error.message,
+      });
+    }
   });
 
   /**

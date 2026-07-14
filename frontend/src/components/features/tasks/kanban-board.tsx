@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Task, TaskStatus } from "@/types/task.types";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DndContext,
   DragEndEvent,
@@ -58,9 +59,11 @@ export function KanbanBoard({
   onTaskClick,
   onAddTask,
 }: KanbanBoardProps) {
-  const { fetchWorkspaceTasks, moveTask, optimisticMove } = useTaskStore();
+  const { fetchWorkspaceTasks, moveTask, optimisticMove, isLoading } =
+    useTaskStore(); // ✅ Added isLoading
   const grouped = useGroupedTasks(workspaceId);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -71,8 +74,87 @@ export function KanbanBoard({
   );
 
   useEffect(() => {
-    fetchWorkspaceTasks(workspaceId);
+    const loadTasks = async () => {
+      setIsInitialLoad(true);
+      await fetchWorkspaceTasks(workspaceId);
+      setIsInitialLoad(false);
+    };
+    loadTasks();
   }, [workspaceId, fetchWorkspaceTasks]);
+
+  // ✅ Loading Skeleton
+  if (isInitialLoad || isLoading) {
+    return (
+      <div className="flex gap-4 p-4 overflow-x-auto h-full">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="flex flex-col min-w-[300px] w-[300px] max-h-full"
+          >
+            {/* Column Header Skeleton */}
+            <div className="h-1 rounded-t-lg bg-slate-700" />
+            <div className="flex-1 bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-lg p-3 space-y-2 min-h-[300px]">
+              <div className="flex items-center justify-between px-2 py-1">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-5 w-8 rounded-full" />
+                </div>
+                <Skeleton className="h-6 w-6 rounded" />
+              </div>
+              {/* Task Cards Skeleton */}
+              {[1, 2, 3, 4].map((j) => (
+                <div
+                  key={j}
+                  className="bg-[#0f1211] border border-white/[0.06] rounded-lg p-3 space-y-2"
+                >
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex items-center justify-between pt-2">
+                    <Skeleton className="h-4 w-16" />
+                    <div className="flex -space-x-2">
+                      <Skeleton className="w-6 h-6 rounded-full" />
+                      <Skeleton className="w-6 h-6 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {/* Add Task Button Skeleton */}
+              <Skeleton className="h-8 w-full rounded-md mt-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ✅ Check if all columns are empty
+  const hasTasks = Object.values(grouped).some((tasks) => tasks.length > 0);
+
+  // ✅ Empty State
+  if (!hasTasks) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📋</span>
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No tasks yet
+          </h3>
+          <p className="text-sm text-slate-400 mb-6">
+            Create your first task to get started with the Kanban board.
+          </p>
+          <button
+            onClick={() => onAddTask("todo")}
+            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md text-sm font-medium transition-colors"
+          >
+            + Create Task
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;

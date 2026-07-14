@@ -7,6 +7,7 @@ import { FileText, Plus, Star, Loader2, Trash2 } from "lucide-react";
 import { useDocumentStore, useWorkspaceDocuments } from "@/store/document.store";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton"; // ✅ ADD THIS
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,9 +36,15 @@ export default function DocumentsPage() {
   } = useDocumentStore();
 
   const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
-    fetchWorkspaceDocuments(workspaceId);
+    const loadDocuments = async () => {
+      setIsInitialLoad(true);
+      await fetchWorkspaceDocuments(workspaceId);
+      setIsInitialLoad(false);
+    };
+    loadDocuments();
   }, [workspaceId]);
 
   const handleCreateDocument = async () => {
@@ -78,6 +85,47 @@ export default function DocumentsPage() {
       });
     }
   };
+
+  // ✅ Loading Skeleton
+  if (isInitialLoad || (isLoading && documents.length === 0)) {
+    return (
+      <div className="flex-1 flex flex-col bg-[#070908] overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="relative px-6 py-3.5 border-b border-white/[0.06] bg-[#070908]/70 backdrop-blur-xl flex-shrink-0 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-9 h-9 rounded-lg" />
+              <div>
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-3 w-20 mt-0.5" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-32 rounded-md" />
+          </div>
+        </div>
+
+        {/* Documents List Skeleton */}
+        <div className="relative flex-1 overflow-y-auto p-6">
+          <div className="max-w-4xl mx-auto space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-4 p-4 rounded-lg border border-white/[0.06]"
+              >
+                <Skeleton className="w-10 h-10 rounded flex-shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+                <Skeleton className="w-8 h-8 rounded flex-shrink-0" />
+                <Skeleton className="w-8 h-8 rounded flex-shrink-0" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-[#070908] overflow-hidden">
@@ -122,14 +170,7 @@ export default function DocumentsPage() {
 
       {/* Documents List */}
       <div className="relative flex-1 overflow-y-auto p-6">
-        {isLoading && documents.length === 0 ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
-              <p className="text-sm text-slate-500">Loading documents...</p>
-            </div>
-          </div>
-        ) : documents.length === 0 ? (
+        {documents.length === 0 ? (
           <div className="max-w-md mx-auto text-center py-16">
             <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-emerald-400" />

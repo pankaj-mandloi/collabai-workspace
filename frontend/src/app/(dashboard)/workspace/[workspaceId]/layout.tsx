@@ -74,6 +74,10 @@ export default function WorkspaceLayout({
     const handleMessageUpdate = (message: any) => updateMessage(message);
     const handleMessageDelete = ({ messageId, workspaceId }: any) =>
       removeMessage(messageId, workspaceId);
+    const handleMessageReaction = (message: any) => {
+      console.log("Reaction received:", message);
+      updateMessage(message);
+    };
     const handleUserTyping = (typingUser: any) => addTypingUser(typingUser);
     const handleUserStoppedTyping = ({ userId, workspaceId }: any) =>
       removeTypingUser(userId, workspaceId);
@@ -82,22 +86,39 @@ export default function WorkspaceLayout({
     const handleUserOffline = ({ userId, workspaceId }: any) =>
       removeOnlineUser(workspaceId, userId);
 
+    // ✅ NEW: User Status Update Handler
+    const handleUserStatus = ({ userId, user }: any) => {
+      console.log(`🔄 User status updated: ${user.email} → ${user.status}`);
+      
+      // Update user status in messages
+      // Since messages store doesn't have user status separately,
+      // we need to update the sender status in existing messages
+      
+      // Option 1: Update message store messages
+      // We'll update by finding messages from this user and updating sender status
+      // For now, we'll just log it. Future messages will have updated status.
+    };
+
     socket.on("message:receive", handleMessageReceive);
     socket.on("message:update", handleMessageUpdate);
     socket.on("message:delete", handleMessageDelete);
+    socket.on("message:reaction", handleMessageReaction);
     socket.on("user:typing", handleUserTyping);
     socket.on("user:stopped-typing", handleUserStoppedTyping);
     socket.on("user:online", handleUserOnline);
     socket.on("user:offline", handleUserOffline);
+    socket.on("user:status", handleUserStatus); // ✅ Add this
 
     return () => {
       socket.off("message:receive", handleMessageReceive);
       socket.off("message:update", handleMessageUpdate);
       socket.off("message:delete", handleMessageDelete);
+      socket.off("message:reaction", handleMessageReaction);
       socket.off("user:typing", handleUserTyping);
       socket.off("user:stopped-typing", handleUserStoppedTyping);
       socket.off("user:online", handleUserOnline);
       socket.off("user:offline", handleUserOffline);
+      socket.off("user:status", handleUserStatus); // ✅ Add this
     };
   }, [socket]);
 
@@ -151,9 +172,7 @@ export default function WorkspaceLayout({
       <WorkspaceSidebar workspace={currentWorkspace} />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {children}
-      </div>
+      <div className="flex-1 flex overflow-hidden">{children}</div>
 
       {/* Right Sidebar */}
       <MembersSidebar workspace={currentWorkspace} />

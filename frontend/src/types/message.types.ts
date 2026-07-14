@@ -6,6 +6,7 @@ export interface MessageUser {
   email: string;
   avatar?: string;
   username?: string;
+  status?: "online" | "away" | "busy" | "offline"; // ✅ User status
 }
 
 // Reaction on message

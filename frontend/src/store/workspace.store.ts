@@ -7,6 +7,7 @@ import {
   InviteMemberPayload,
 } from "@/types/workspace.types";
 import { workspaceService } from "@/services/workspace.service";
+import { UserStatus, UpdateStatusPayload } from "@/types/user.types";
 
 interface WorkspaceState {
   // ============================================
@@ -43,6 +44,11 @@ interface WorkspaceState {
     invitationId: string
   ) => Promise<void>;
   removeMember: (workspaceId: string, memberId: string) => Promise<void>;
+  
+  // ✅ NEW: User Status Actions
+  updateUserStatus: (payload: UpdateStatusPayload) => Promise<void>;
+  getUserStatus: () => Promise<UserStatus | null>;
+  
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   clearError: () => void;
   reset: () => void;
@@ -280,6 +286,96 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           set({ error: message });
           console.error("❌ Remove member error:", message);
           throw error;
+        }
+      },
+
+      // ============================================
+      // ✅ NEW: User Status Actions
+      // ============================================
+
+      /**
+       * Update current user's status
+       */
+      updateUserStatus: async (payload: UpdateStatusPayload) => {
+        set({ error: null });
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me/status`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify(payload),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to update status");
+          }
+
+          const data = await response.json();
+          console.log("✅ Status updated:", payload.status);
+          
+          // Update current workspace members' status
+          set((state) => {
+            if (!state.currentWorkspace) return state;
+            
+            const updatedMembers = state.currentWorkspace.members.map((member) => {
+              // @ts-ignore - member.user._id might be string or object
+              const memberId = member.user._id?.toString?.() || member.user._id;
+              // @ts-ignore - current user ID from store
+              const currentUserId = state.currentWorkspace?._id;
+              
+              // Find current user in members and update status
+              // We'll update via socket instead
+              return member;
+            });
+
+            return {
+              ...state,
+              currentWorkspace: {
+                ...state.currentWorkspace,
+                members: updatedMembers,
+              },
+            };
+          });
+
+          return data.data;
+        } catch (error: any) {
+          const message = error.message || "Failed to update status";
+          set({ error: message });
+          console.error("❌ Update status error:", message);
+          throw error;
+        }
+      },
+
+      /**
+       * Get current user's status
+       */
+      getUserStatus: async () => {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me/status`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to get status");
+          }
+
+          const data = await response.json();
+          return data.data.status;
+        } catch (error: any) {
+          console.error("❌ Get status error:", error.message);
+          return null;
         }
       },
 

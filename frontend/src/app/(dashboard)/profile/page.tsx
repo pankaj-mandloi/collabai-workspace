@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useEffect } from "react";
+import { StatusPicker } from "@/components/features/user/status-picker";
 import {
   User,
   Mail,

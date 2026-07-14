@@ -8,4 +8,17 @@ const router = Router();
 router.get("/me", protect, userController.getCurrentUser);
 router.patch("/me", protect, userController.updateProfile);
 
+// ============================================
+// ✅ NEW: User Status Routes
+// ============================================
+
+// Get current user's status
+router.get("/me/status", protect, userController.getStatus);
+
+// Update current user's status
+router.patch("/me/status", protect, userController.updateStatus);
+
+// Get all users in workspace with status
+router.get("/workspace/:workspaceId/status", protect, userController.getWorkspaceUsersStatus);
+
 export default router;

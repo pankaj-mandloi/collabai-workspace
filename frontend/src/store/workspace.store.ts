@@ -8,7 +8,7 @@ import {
 } from "@/types/workspace.types";
 import { workspaceService } from "@/services/workspace.service";
 import { UserStatus, UpdateStatusPayload } from "@/types/user.types";
-
+import api from "@/services/api";
 interface WorkspaceState {
   // ============================================
   // STATE
@@ -32,23 +32,23 @@ interface WorkspaceState {
   createWorkspace: (payload: CreateWorkspacePayload) => Promise<Workspace>;
   updateWorkspace: (
     id: string,
-    payload: UpdateWorkspacePayload
+    payload: UpdateWorkspacePayload,
   ) => Promise<Workspace>;
   deleteWorkspace: (id: string) => Promise<void>;
   inviteMember: (
     workspaceId: string,
-    payload: InviteMemberPayload
+    payload: InviteMemberPayload,
   ) => Promise<void>;
   cancelInvitation: (
     workspaceId: string,
-    invitationId: string
+    invitationId: string,
   ) => Promise<void>;
   removeMember: (workspaceId: string, memberId: string) => Promise<void>;
-  
+
   // ✅ NEW: User Status Actions
   updateUserStatus: (payload: UpdateStatusPayload) => Promise<void>;
   getUserStatus: () => Promise<UserStatus | null>;
-  
+
   setCurrentWorkspace: (workspace: Workspace | null) => void;
   clearError: () => void;
   reset: () => void;
@@ -139,16 +139,13 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       // UPDATE WORKSPACE
       // ============================================
 
-      updateWorkspace: async (
-        id: string,
-        payload: UpdateWorkspacePayload
-      ) => {
+      updateWorkspace: async (id: string, payload: UpdateWorkspacePayload) => {
         set({ isUpdating: true, error: null });
         try {
           const updatedWorkspace = await workspaceService.update(id, payload);
           set((state) => ({
             workspaces: state.workspaces.map((w) =>
-              w._id === id ? updatedWorkspace : w
+              w._id === id ? updatedWorkspace : w,
             ),
             currentWorkspace:
               state.currentWorkspace?._id === id
@@ -199,17 +196,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       inviteMember: async (
         workspaceId: string,
-        payload: InviteMemberPayload
+        payload: InviteMemberPayload,
       ) => {
         set({ error: null });
         try {
           const updatedWorkspace = await workspaceService.inviteMember(
             workspaceId,
-            payload
+            payload,
           );
           set((state) => ({
             workspaces: state.workspaces.map((w) =>
-              w._id === workspaceId ? updatedWorkspace : w
+              w._id === workspaceId ? updatedWorkspace : w,
             ),
             currentWorkspace:
               state.currentWorkspace?._id === workspaceId
@@ -230,19 +227,16 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       // CANCEL INVITATION
       // ============================================
 
-      cancelInvitation: async (
-        workspaceId: string,
-        invitationId: string
-      ) => {
+      cancelInvitation: async (workspaceId: string, invitationId: string) => {
         set({ error: null });
         try {
           const updatedWorkspace = await workspaceService.cancelInvitation(
             workspaceId,
-            invitationId
+            invitationId,
           );
           set((state) => ({
             workspaces: state.workspaces.map((w) =>
-              w._id === workspaceId ? updatedWorkspace : w
+              w._id === workspaceId ? updatedWorkspace : w,
             ),
             currentWorkspace:
               state.currentWorkspace?._id === workspaceId
@@ -268,11 +262,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         try {
           const updatedWorkspace = await workspaceService.removeMember(
             workspaceId,
-            memberId
+            memberId,
           );
           set((state) => ({
             workspaces: state.workspaces.map((w) =>
-              w._id === workspaceId ? updatedWorkspace : w
+              w._id === workspaceId ? updatedWorkspace : w,
             ),
             currentWorkspace:
               state.currentWorkspace?._id === workspaceId
@@ -299,52 +293,19 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       updateUserStatus: async (payload: UpdateStatusPayload) => {
         set({ error: null });
         try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me/status`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-              body: JSON.stringify(payload),
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to update status");
-          }
-
-          const data = await response.json();
+          const response = await api.patch("/users/me/status", payload);
+          const data = response.data;
           console.log("✅ Status updated:", payload.status);
-          
-          // Update current workspace members' status
+
           set((state) => {
             if (!state.currentWorkspace) return state;
-            
-            const updatedMembers = state.currentWorkspace.members.map((member) => {
-              // @ts-ignore - member.user._id might be string or object
-              const memberId = member.user._id?.toString?.() || member.user._id;
-              // @ts-ignore - current user ID from store
-              const currentUserId = state.currentWorkspace?._id;
-              
-              // Find current user in members and update status
-              // We'll update via socket instead
-              return member;
-            });
-
-            return {
-              ...state,
-              currentWorkspace: {
-                ...state.currentWorkspace,
-                members: updatedMembers,
-              },
-            };
+            return state;
           });
 
           return data.data;
         } catch (error: any) {
-          const message = error.message || "Failed to update status";
+          const message =
+            error.response?.data?.message || "Failed to update status";
           set({ error: message });
           console.error("❌ Update status error:", message);
           throw error;
@@ -356,23 +317,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
        */
       getUserStatus: async () => {
         try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me/status`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error("Failed to get status");
-          }
-
-          const data = await response.json();
-          return data.data.status;
+          const response = await api.get("/users/me/status");
+          return response.data.data.status;
         } catch (error: any) {
           console.error("❌ Get status error:", error.message);
           return null;
@@ -395,8 +341,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
       reset: () => set(initialState),
     }),
-    { name: "workspace-store" }
-  )
+    { name: "workspace-store" },
+  ),
 );
 
 // ============================================
@@ -408,7 +354,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
  */
 export const useWorkspaceById = (id: string | null) => {
   return useWorkspaceStore((state) =>
-    id ? state.workspaces.find((w) => w._id === id) || null : null
+    id ? state.workspaces.find((w) => w._id === id) || null : null,
   );
 };
 

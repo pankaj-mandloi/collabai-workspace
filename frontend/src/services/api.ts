@@ -7,22 +7,28 @@ const api: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Important: Send cookies with requests
+  withCredentials: true,
 });
 
-// Request interceptor - Add auth token from Clerk
+// Clerk load hone tak wait karta hai — request ke andar, mount pe nahi
+async function waitForClerk(maxRetries = 30, interval = 100) {
+  let tries = 0;
+  while (!(window as any).Clerk?.session && tries < maxRetries) {
+    await new Promise((r) => setTimeout(r, interval));
+    tries++;
+  }
+  return (window as any).Clerk;
+}
+
 api.interceptors.request.use(
   async (config) => {
     if (typeof window !== "undefined") {
-      const clerk = (window as any).Clerk;
+      const clerk = await waitForClerk();
       if (clerk?.session) {
         try {
-          const token = await clerk.session.getToken({
-            skipCache: true,
-          });
+          const token = await clerk.session.getToken({ skipCache: true });
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log("✅ Token attached:", token.substring(0, 20) + "...");
           }
         } catch (error) {
           console.error("❌ Error getting token:", error);
@@ -34,7 +40,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor - Handle errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {

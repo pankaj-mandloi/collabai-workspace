@@ -13,43 +13,34 @@ const api: AxiosInstance = axios.create({
 // Request interceptor - Add auth token from Clerk
 api.interceptors.request.use(
   async (config) => {
-    // Get token from Clerk (works in browser)
     if (typeof window !== "undefined") {
       const clerk = (window as any).Clerk;
       if (clerk?.session) {
         try {
-          // ✅ Force fresh token with skipCache
-          const token = await clerk.session.getToken({ 
-            skipCache: true 
+          const token = await clerk.session.getToken({
+            skipCache: true,
           });
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             console.log("✅ Token attached:", token.substring(0, 20) + "...");
-          } else {
-            console.log("⚠️ No token found");
           }
         } catch (error) {
           console.error("❌ Error getting token:", error);
         }
-      } else {
-        console.log("⚠️ Clerk not initialized or no session");
       }
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor - Handle errors globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error(
-      "API Error:",
-      error.response?.data?.message || error.message
-    );
+    console.error("API Error:", error.response?.data?.message || error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

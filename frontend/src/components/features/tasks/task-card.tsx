@@ -79,11 +79,12 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
     },
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isSortableDragging ? 0.4 : 1,
-  };
+ const style = {
+  transform: CSS.Transform.toString(transform),
+  transition,
+  opacity: isSortableDragging ? 0.4 : 1,
+  touchAction: "none" as const,
+};
 
   const priority = priorityConfig[task.priority];
   const PriorityIcon = priority.icon;

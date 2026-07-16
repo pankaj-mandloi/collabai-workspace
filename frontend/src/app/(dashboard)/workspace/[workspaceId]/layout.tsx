@@ -9,7 +9,7 @@ import { WorkspaceSidebar } from "@/components/features/workspace/workspace-side
 import { MembersSidebar } from "@/components/features/workspace/members-sidebar";
 import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
+import { MobileBottomNav } from "@/components/features/workspace/mobile-bottom-nav";
 export default function WorkspaceLayout({
   children,
 }: {
@@ -167,15 +167,18 @@ export default function WorkspaceLayout({
   }
 
   return (
-    <div className="fixed inset-0 top-[64px] flex bg-[#070908]">
-      {/* Left Sidebar */}
+  <div className="fixed inset-0 top-[64px] flex bg-[#070908]">
+    <div className="hidden md:flex">
       <WorkspaceSidebar workspace={currentWorkspace} />
+    </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">{children}</div>
+    <div className="flex-1 flex overflow-hidden pb-16 md:pb-0">{children}</div>
 
-      {/* Right Sidebar */}
+    <div className="hidden lg:flex">
       <MembersSidebar workspace={currentWorkspace} />
     </div>
-  );
+
+    <MobileBottomNav workspaceId={workspaceId} />
+  </div>
+);
 }

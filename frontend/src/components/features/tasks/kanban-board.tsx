@@ -250,7 +250,7 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 p-6 overflow-x-auto h-full">
+      <div className="flex gap-4 p-3 md:p-6 overflow-x-auto h-full snap-x snap-mandatory [touch-action:pan-x]">
         {(Object.keys(columnConfig) as TaskStatus[]).map((status) => (
           <KanbanColumn
             key={status}

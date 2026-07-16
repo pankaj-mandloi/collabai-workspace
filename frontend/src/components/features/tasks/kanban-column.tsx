@@ -39,7 +39,7 @@ export function KanbanColumn({
   });
 
   return (
-    <div className="flex flex-col min-w-[320px] w-[320px] max-h-full">
+    <div className="flex flex-col min-w-[85vw] w-[85vw] sm:min-w-[320px] sm:w-[320px] max-h-full snap-start">
       {/* Column Header - Colored top border */}
       <div className={`h-1 rounded-t-lg ${bgColor}`} />
 

@@ -19,22 +19,17 @@ import dynamic from "next/dynamic";
 const CreateWorkspaceDialog = dynamic(
   () =>
     import("@/components/features/workspace/create-workspace-dialog").then(
-      (mod) => mod.CreateWorkspaceDialog
+      (mod) => mod.CreateWorkspaceDialog,
     ),
-  { ssr: false }
+  { ssr: false },
 );
 import { PendingInvitations } from "@/components/features/workspace/pending-invitations";
 import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
-  const {
-    workspaces,
-    isLoading,
-    error,
-    fetchWorkspaces,
-    clearError,
-  } = useWorkspaceStore();
+  const { workspaces, isLoading, error, fetchWorkspaces, clearError } =
+    useWorkspaceStore();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -43,10 +38,7 @@ export default function DashboardPage() {
   }, [fetchWorkspaces]);
 
   // Calculate total members across all workspaces
-  const totalMembers = workspaces.reduce(
-    (acc, w) => acc + w.members.length,
-    0
-  );
+  const totalMembers = workspaces.reduce((acc, w) => acc + w.members.length, 0);
 
   if (!isLoaded) {
     return (
@@ -147,7 +139,7 @@ export default function DashboardPage() {
 
         {/* Workspaces Section */}
         <div>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-2xl font-bold text-white tracking-tight">
                 Your Workspaces

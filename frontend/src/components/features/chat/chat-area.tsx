@@ -5,7 +5,15 @@ import { Workspace } from "@/types/workspace.types";
 import { MessageList } from "./message-list";
 import { MessageInput } from "./message-input";
 import { TypingIndicator } from "./typing-indicator";
-import { AIChatPanel } from "@/components/features/ai/ai-chat-panel";
+// import { AIChatPanel } from "@/components/features/ai/ai-chat-panel";
+import dynamic from "next/dynamic";
+const AIChatPanel = dynamic(
+  () =>
+    import("@/components/features/ai/ai-chat-panel").then(
+      (mod) => mod.AIChatPanel
+    ),
+  { ssr: false }
+);
 import { Hash, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

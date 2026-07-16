@@ -13,7 +13,16 @@ import {
 } from "lucide-react";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { WorkspaceCard } from "@/components/features/workspace/workspace-card";
-import { CreateWorkspaceDialog } from "@/components/features/workspace/create-workspace-dialog";
+// import { CreateWorkspaceDialog } from "@/components/features/workspace/create-workspace-dialog";
+import dynamic from "next/dynamic";
+
+const CreateWorkspaceDialog = dynamic(
+  () =>
+    import("@/components/features/workspace/create-workspace-dialog").then(
+      (mod) => mod.CreateWorkspaceDialog
+    ),
+  { ssr: false }
+);
 import { PendingInvitations } from "@/components/features/workspace/pending-invitations";
 import { useEffect, useState } from "react";
 

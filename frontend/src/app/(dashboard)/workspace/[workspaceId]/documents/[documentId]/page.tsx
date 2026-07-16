@@ -2,13 +2,28 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { DocumentEditor } from "@/components/features/documents/document-editor";
+// import { DocumentEditor } from "@/components/features/documents/document-editor";
 import { useDocumentStore } from "@/store/document.store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Star, Check, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
+const DocumentEditor = dynamic(
+  () =>
+    import("@/components/features/documents/document-editor").then(
+      (mod) => mod.DocumentEditor
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+      </div>
+    ),
+  }
+);
 
 export default function DocumentEditorPage() {
   const params = useParams();

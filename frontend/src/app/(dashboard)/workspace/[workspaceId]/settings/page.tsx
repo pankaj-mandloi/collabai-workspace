@@ -10,7 +10,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useWorkspaceStore } from "@/store/workspace.store";
 import { useUser } from "@clerk/nextjs";
-import { InviteMemberDialog } from "@/components/features/workspace/invite-member-dialog";
+// import { InviteMemberDialog } from "@/components/features/workspace/invite-member-dialog";
+import dynamic from "next/dynamic";
+const InviteMemberDialog = dynamic(
+  () =>
+    import("@/components/features/workspace/invite-member-dialog").then(
+      (mod) => mod.InviteMemberDialog
+    ),
+  { ssr: false }
+);
 import {
   Settings,
   Save,

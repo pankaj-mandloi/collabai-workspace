@@ -3,8 +3,17 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { KanbanBoard } from "@/components/features/tasks/kanban-board";
-import { CreateTaskDialog } from "@/components/features/tasks/create-task-dialog";
-import { TaskDetailDialog } from "@/components/features/tasks/task-detail-dialog";
+// import { CreateTaskDialog } from "@/components/features/tasks/create-task-dialog";
+import dynamic from "next/dynamic";
+const CreateTaskDialog = dynamic(
+  () => import("@/components/features/tasks/create-task-dialog").then((mod) => mod.CreateTaskDialog),
+  { ssr: false }
+);
+const TaskDetailDialog = dynamic(
+  () => import("@/components/features/tasks/task-detail-dialog").then((mod) => mod.TaskDetailDialog),
+  { ssr: false }
+);
+// import { TaskDetailDialog } from "@/components/features/tasks/task-detail-dialog";
 import { Task, TaskStatus } from "@/types/task.types";
 import { Button } from "@/components/ui/button";
 import { Plus, LayoutGrid } from "lucide-react";

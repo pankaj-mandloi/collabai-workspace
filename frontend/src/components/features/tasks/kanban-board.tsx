@@ -32,6 +32,7 @@ const columnConfig: Record<
     color: string;
     bgColor: string;
     countBg: string;
+    icon: string;
   }
 > = {
   todo: {
@@ -39,18 +40,21 @@ const columnConfig: Record<
     color: "text-slate-300",
     bgColor: "bg-slate-500",
     countBg: "bg-white/[0.05]",
+    icon: "📝",
   },
   in_progress: {
     title: "In Progress",
     color: "text-lime-300",
     bgColor: "bg-lime-500",
     countBg: "bg-lime-500/10",
+    icon: "🔄",
   },
   done: {
     title: "Done",
     color: "text-emerald-300",
     bgColor: "bg-emerald-500",
     countBg: "bg-emerald-500/10",
+    icon: "✅",
   },
 };
 
@@ -60,10 +64,13 @@ export function KanbanBoard({
   onAddTask,
 }: KanbanBoardProps) {
   const { fetchWorkspaceTasks, moveTask, optimisticMove, isLoading } =
-    useTaskStore(); // ✅ Added isLoading
+    useTaskStore();
   const grouped = useGroupedTasks(workspaceId);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
+  // ✅ State for mobile tab
+  const [activeTab, setActiveTab] = useState<TaskStatus>("todo");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -82,7 +89,7 @@ export function KanbanBoard({
     loadTasks();
   }, [workspaceId, fetchWorkspaceTasks]);
 
-  // ✅ Loading Skeleton
+  // ✅ Loading Skeleton (UNCHANGED)
   if (isInitialLoad || isLoading) {
     return (
       <div className="flex gap-4 p-4 overflow-x-auto h-full">
@@ -91,7 +98,6 @@ export function KanbanBoard({
             key={i}
             className="flex flex-col min-w-[300px] w-[300px] max-h-full"
           >
-            {/* Column Header Skeleton */}
             <div className="h-1 rounded-t-lg bg-slate-700" />
             <div className="flex-1 bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-lg p-3 space-y-2 min-h-[300px]">
               <div className="flex items-center justify-between px-2 py-1">
@@ -102,7 +108,6 @@ export function KanbanBoard({
                 </div>
                 <Skeleton className="h-6 w-6 rounded" />
               </div>
-              {/* Task Cards Skeleton */}
               {[1, 2, 3, 4].map((j) => (
                 <div
                   key={j}
@@ -119,7 +124,6 @@ export function KanbanBoard({
                   </div>
                 </div>
               ))}
-              {/* Add Task Button Skeleton */}
               <Skeleton className="h-8 w-full rounded-md mt-2" />
             </div>
           </div>
@@ -128,10 +132,9 @@ export function KanbanBoard({
     );
   }
 
-  // ✅ Check if all columns are empty
   const hasTasks = Object.values(grouped).some((tasks) => tasks.length > 0);
 
-  // ✅ Empty State
+  // ✅ Empty State (UNCHANGED)
   if (!hasTasks) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -243,6 +246,9 @@ export function KanbanBoard({
     }
   };
 
+  // Get current column tasks
+  const currentTasks = grouped[activeTab] || [];
+
   return (
     <DndContext
       sensors={sensors}
@@ -250,7 +256,43 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 p-3 md:p-6 overflow-x-auto h-full snap-x snap-mandatory [touch-action:pan-x]">
+      {/* ✅ MOBILE TAB SWITCHER - Only visible on mobile */}
+      <div className="md:hidden flex gap-1 p-2 bg-white/[0.02] border-b border-white/[0.06] overflow-x-auto sticky top-0 z-10">
+        {(Object.keys(columnConfig) as TaskStatus[]).map((status) => {
+          const config = columnConfig[status];
+          const count = grouped[status]?.length || 0;
+          const isActive = activeTab === status;
+
+          return (
+            <button
+              key={status}
+              onClick={() => setActiveTab(status)}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap flex-1 justify-center
+                ${
+                  isActive
+                    ? `bg-${config.bgColor} text-white border border-white/10`
+                    : "text-slate-400 hover:text-white hover:bg-white/[0.05]"
+                }
+              `}
+            >
+              <span>{config.icon}</span>
+              <span>{config.title}</span>
+              <span
+                className={`
+                  text-[10px] px-1.5 py-0.5 rounded-full
+                  ${isActive ? "bg-white/10" : "bg-white/[0.05]"}
+                `}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ✅ Desktop: All columns side-by-side */}
+     <div className="hidden md:flex gap-4 p-3 md:p-6 overflow-x-auto h-full justify-start xl:justify-center">
         {(Object.keys(columnConfig) as TaskStatus[]).map((status) => (
           <KanbanColumn
             key={status}
@@ -264,6 +306,20 @@ export function KanbanBoard({
             onAddTask={onAddTask}
           />
         ))}
+      </div>
+
+      {/* ✅ Mobile: Only active column */}
+      <div className="md:hidden h-full p-3">
+        <KanbanColumn
+          status={activeTab}
+          title={columnConfig[activeTab].title}
+          color={columnConfig[activeTab].color}
+          bgColor={columnConfig[activeTab].bgColor}
+          countBg={columnConfig[activeTab].countBg}
+          tasks={currentTasks}
+          onTaskClick={onTaskClick}
+          onAddTask={onAddTask}
+        />
       </div>
 
       <DragOverlay>

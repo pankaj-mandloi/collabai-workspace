@@ -79,12 +79,12 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
     },
   });
 
- const style = {
-  transform: CSS.Transform.toString(transform),
-  transition,
-  opacity: isSortableDragging ? 0.4 : 1,
-  touchAction: "none" as const,
-};
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.4 : 1,
+    touchAction: "none" as const,
+  };
 
   const priority = priorityConfig[task.priority];
   const PriorityIcon = priority.icon;
@@ -130,24 +130,34 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
           rounded-md p-3 cursor-pointer transition-all
           hover:border-white/10 hover:border-l-4
           ${isDragging ? "shadow-2xl shadow-emerald-500/20 rotate-2 ring-1 ring-emerald-500/30" : ""}
+          touch-manipulation
         `}
       >
         {/* Top Right Actions */}
         <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
-          {/* Priority Icon (urgent only) */}
           {task.priority === "urgent" && PriorityIcon && (
             <PriorityIcon className={`w-3.5 h-3.5 ${priority.iconColor}`} />
           )}
 
-          {/* Delete Button - Shows on hover, RED color */}
+          {/* Delete Button - Shows on hover/active for touch */}
           <button
             onClick={handleDeleteClick}
             onPointerDown={(e) => e.stopPropagation()}
             disabled={isDeleting}
-            className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all border border-red-500/20 hover:border-red-500/40 bg-red-500/10"
+            className="
+              opacity-0 group-hover:opacity-100 
+              sm:group-hover:opacity-100 
+              active:opacity-100
+              w-7 h-7 sm:w-6 sm:h-6 
+              rounded flex items-center justify-center 
+              text-red-400 hover:text-red-300 hover:bg-red-500/20 
+              transition-all border border-red-500/20 hover:border-red-500/40 
+              bg-red-500/10
+              touch-manipulation
+            "
             title="Delete task"
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
           </button>
         </div>
 
@@ -186,7 +196,6 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
 
         {/* Metadata Row */}
         <div className="flex items-center gap-2.5 mb-3 flex-wrap">
-          {/* Due Date */}
           {dueDate && (
             <div
               className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded ${
@@ -202,7 +211,6 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
             </div>
           )}
 
-          {/* Checklist Progress */}
           {task.checklist && task.checklist.length > 0 && (
             <div className="inline-flex items-center gap-1 text-[10px] text-slate-400 font-medium bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded">
               <CheckSquare className="w-2.5 h-2.5" />
@@ -213,7 +221,6 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
             </div>
           )}
 
-          {/* Comments Count */}
           {task.comments && task.comments.length > 0 && (
             <div className="inline-flex items-center gap-1 text-[10px] text-slate-400 font-medium bg-white/[0.03] border border-white/[0.06] px-2 py-0.5 rounded">
               <MessageSquare className="w-2.5 h-2.5" />
@@ -224,14 +231,12 @@ export function TaskCard({ task, onClick, isDragging = false }: TaskCardProps) {
 
         {/* Footer: Priority + Assignees */}
         <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
-          {/* Priority Text */}
           <span
             className={`text-[10px] font-semibold uppercase tracking-wider ${priority.iconColor}`}
           >
             {priority.label}
           </span>
 
-          {/* Assignees */}
           {task.assignees && task.assignees.length > 0 && (
             <div className="flex -space-x-1.5">
               {task.assignees.slice(0, 3).map((assignee, idx) => (

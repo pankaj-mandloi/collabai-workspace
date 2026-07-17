@@ -117,24 +117,43 @@ export function NotificationBell() {
         />
       )}
 
-      {/* Dropdown Panel */}
+      {/* ✅ FIXED: Dropdown Panel - Responsive positioning */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-[380px] bg-[#0a0c0b] border border-white/10 rounded-xl shadow-2xl shadow-emerald-500/5 z-50 overflow-hidden">
+        <div 
+          className="
+            absolute 
+            top-full 
+            mt-2 
+            z-50 
+            overflow-hidden
+            right-[-120px] 
+            sm:right-0 
+            w-[calc(100vw-2rem)] 
+            sm:w-[380px] 
+            max-w-[380px]
+            bg-[#0a0c0b] 
+            border 
+            border-white/10 
+            rounded-xl 
+            shadow-2xl 
+            shadow-emerald-500/5
+          "
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-emerald-400" />
-              <h3 className="font-semibold text-white text-sm">
+            <div className="flex items-center gap-2 min-w-0">
+              <Bell className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <h3 className="font-semibold text-white text-sm truncate">
                 Notifications
               </h3>
               {unreadCount > 0 && (
-                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium">
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
                   {unreadCount} new
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}

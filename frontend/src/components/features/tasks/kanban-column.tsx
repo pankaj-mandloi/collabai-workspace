@@ -39,14 +39,14 @@ export function KanbanColumn({
   });
 
   return (
-    <div className="flex flex-col min-w-[85vw] w-[85vw] sm:min-w-[320px] sm:w-[320px] max-h-full snap-start">
+   <div className="flex flex-col w-full md:w-[280px] lg:w-[320px] max-h-full">
       {/* Column Header - Colored top border */}
       <div className={`h-1 rounded-t-lg ${bgColor}`} />
 
       {/* Column Content */}
       <div className="flex flex-col flex-1 bg-white/[0.02] border border-white/[0.06] border-t-0 rounded-b-lg overflow-hidden">
-        {/* Header with visible Add button */}
-        <div className="px-4 py-3.5 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0">
+        {/* Header */}
+        <div className="px-3 sm:px-4 py-3 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${bgColor}`} />
             <h3 className={`font-semibold text-sm ${color}`}>{title}</h3>
@@ -57,7 +57,6 @@ export function KanbanColumn({
             </span>
           </div>
 
-          {/* Visible Add Button with icon + text on hover */}
           <button
             onClick={() => onAddTask(status)}
             className="flex items-center gap-1 px-2 py-1 rounded-md text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all text-xs font-medium group"
@@ -91,7 +90,6 @@ export function KanbanColumn({
             ))}
           </SortableContext>
 
-          {/* Empty State - Only shown when no tasks */}
           {tasks.length === 0 && (
             <button
               onClick={() => onAddTask(status)}

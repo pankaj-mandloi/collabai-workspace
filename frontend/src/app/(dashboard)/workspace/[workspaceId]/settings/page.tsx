@@ -590,7 +590,7 @@ export default function WorkspaceSettingsPage() {
                     <Button
                       onClick={() => setDeleteDialogOpen(true)}
                       disabled={isDeleting}
-                      className="bg-red-500 hover:bg-red-600 text-white font-medium h-9 px-4 gap-1.5 text-sm"
+                      className="bg-red-500 hover:bg-red-600 text-white font-medium h-9 px-3 gap-1.5 text-sm"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Delete Workspace

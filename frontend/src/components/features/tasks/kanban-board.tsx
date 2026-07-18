@@ -5,6 +5,7 @@ import { Task, TaskStatus } from "@/types/task.types";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ClipboardList } from "lucide-react";
 import {
   DndContext,
   DragEndEvent,
@@ -68,7 +69,7 @@ export function KanbanBoard({
   const grouped = useGroupedTasks(workspaceId);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  
+
   // ✅ State for mobile tab
   const [activeTab, setActiveTab] = useState<TaskStatus>("todo");
 
@@ -77,7 +78,7 @@ export function KanbanBoard({
       activationConstraint: {
         distance: 5,
       },
-    })
+    }),
   );
 
   useEffect(() => {
@@ -140,7 +141,7 @@ export function KanbanBoard({
       <div className="flex items-center justify-center h-full p-8">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">📋</span>
+            <ClipboardList className="w-8 h-8 text-emerald-400" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">
             No tasks yet
@@ -292,7 +293,7 @@ export function KanbanBoard({
       </div>
 
       {/* ✅ Desktop: All columns side-by-side */}
-     <div className="hidden md:flex gap-4 p-3 md:p-6 overflow-x-auto h-full justify-start xl:justify-center">
+      <div className="hidden md:flex gap-4 p-3 md:p-6 overflow-x-auto h-full justify-start xl:justify-center">
         {(Object.keys(columnConfig) as TaskStatus[]).map((status) => (
           <KanbanColumn
             key={status}

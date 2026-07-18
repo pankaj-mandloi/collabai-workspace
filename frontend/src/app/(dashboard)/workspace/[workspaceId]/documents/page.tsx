@@ -7,7 +7,7 @@ import { FileText, Plus, Star, Loader2, Trash2 } from "lucide-react";
 import { useDocumentStore, useWorkspaceDocuments } from "@/store/document.store";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton"; // ✅ ADD THIS
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +53,6 @@ export default function DocumentsPage() {
         workspaceId,
         title: "Untitled Document",
         content: "",
-        icon: "📄",
       });
       toast.success("Document created!");
       router.push(`/workspace/${workspaceId}/documents/${doc._id}`);
@@ -209,7 +208,9 @@ export default function DocumentsPage() {
                   }
                   className="group bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] hover:border-emerald-500/30 rounded-lg p-4 cursor-pointer transition-all flex items-center gap-4"
                 >
-                  <div className="text-2xl">{doc.icon || "📄"}</div>
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 text-emerald-400" />
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-white truncate group-hover:text-emerald-400 transition-colors">
